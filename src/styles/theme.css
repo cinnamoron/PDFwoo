@@ -1,0 +1,31 @@
+/*
+  Design tokens for the ConceptIQ nav chrome.
+  Import this after your Tailwind import in globals.css, e.g.:
+
+    @import "tailwindcss";
+    @import "./styles/theme.css";
+
+  Tailwind v4 turns every --color-* var below into matching utilities
+  automatically: bg-ink-950, text-mist-400, from-brand-600, ring-brand-500/70,
+  shadow-[...var(--color-brand-600)...], etc.
+*/
+
+@theme {
+  /* Dark neutral surfaces — near-black, tinted mauve/purple */
+  --color-ink-950: oklch(26.3% 0.024 320.12); /* base nav background */
+  --color-ink-900: oklch(30% 0.027 320);      /* raised panels, dropdowns */
+  --color-ink-800: oklch(35% 0.03 319);        /* hairlines, hover fills */
+  --color-ink-700: oklch(42% 0.032 318);       /* borders on raised panels */
+
+  /* Text on dark surfaces */
+  --color-mist-300: oklch(88% 0.015 300);
+  --color-mist-400: oklch(73% 0.02 300);
+
+  /* Primary accent — vivid purple */
+  --color-brand-500: oklch(64% 0.24 305);
+  --color-brand-600: oklch(55.8% 0.288 302.321);
+
+  /* Secondary accent — magenta/pink, paired for gradients */
+  --color-bloom-500: oklch(66% 0.21 356);
+  --color-bloom-600: oklch(58% 0.245 358);
+}
