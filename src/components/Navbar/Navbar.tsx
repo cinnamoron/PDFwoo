@@ -29,7 +29,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-ink-950/90 backdrop-blur-md">
       <nav className="relative mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
-          href="/dashboard"
+            href="/"
           className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/70"
         >
           <ConceptMark />
