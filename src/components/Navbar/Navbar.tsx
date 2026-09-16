@@ -16,6 +16,7 @@ export default function Navbar() {
     role === "teacher"
       ? [
           { href: "/dashboard", label: "Dashboard" },
+          { href: "/materials", label: "Materials" },
           { href: "/assessments", label: "Assessments" },
           { href: "/analytics", label: "Analytics" },
         ]

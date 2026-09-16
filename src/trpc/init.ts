@@ -23,7 +23,7 @@ const isAuthed = t.middleware(async ({ ctx, next }) => {
         throw new TRPCError({ code: "UNAUTHORIZED" });
     }
 
-    const [domainUser] = "User" //TODO: Fix this later
+    const domainUser = ctx.session.user;
 
     if (!domainUser) {
         throw new TRPCError({ code: "NOT_FOUND", message: "User profile not found" });

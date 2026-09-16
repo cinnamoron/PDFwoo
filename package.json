@@ -23,6 +23,7 @@
     "react-dom": "19.2.8",
     "react-redux": "^9.3.0",
     "superjson": "^2.2.6",
+    "unpdf": "^1.8.1",
     "zod": "^4.6.2"
   },
   "devDependencies": {
@@ -31,6 +32,7 @@
     "@types/pg": "^8.23.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "babel-plugin-react-compiler": "^1.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
