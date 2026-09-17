@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTRPC } from "@/trpc/client";
 
 type Concept = {
@@ -18,6 +19,7 @@ type Concept = {
 
 export default function ConceptsReview({ materialId }: { materialId: string }) {
   const trpc = useTRPC();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const conceptsQuery = useQuery(trpc.concepts.listByMaterial.queryOptions({ materialId }));
   const generateConcepts = useMutation(trpc.concepts.generate.mutationOptions({
@@ -41,6 +43,8 @@ export default function ConceptsReview({ materialId }: { materialId: string }) {
       await queryClient.invalidateQueries({ queryKey: trpc.concepts.listByMaterial.queryKey({ materialId }) });
     },
   }));
+  const createAssessment = useMutation(trpc.assessments.create.mutationOptions());
+  const updateAssessmentConfig = useMutation(trpc.assessments.updateConfig.mutationOptions());
 
   const [newName, setNewName] = useState("");
   const [newDescription, setNewDescription] = useState("");
@@ -54,6 +58,20 @@ export default function ConceptsReview({ materialId }: { materialId: string }) {
 
   const handleGenerate = async () => {
     await generateConcepts.mutateAsync({ materialId });
+  };
+
+  const handleCreateAssessment = async () => {
+    const includedConceptIds = concepts.filter((concept) => concept.isIncluded).map((concept) => concept.id);
+    const assessment = await createAssessment.mutateAsync({ materialId });
+
+    await updateAssessmentConfig.mutateAsync({
+      assessmentId: assessment.id,
+      numQuestions: 10,
+      difficulty: "mixed",
+      conceptIds: includedConceptIds.length > 0 ? includedConceptIds : concepts.map((concept) => concept.id),
+    });
+
+    router.push(`/materials/${materialId}/assessments/${assessment.id}`);
   };
 
   if (conceptsQuery.isPending) {
@@ -119,14 +137,24 @@ export default function ConceptsReview({ materialId }: { materialId: string }) {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-bloom-500">Concept review</p>
             <h1 className="mt-3 text-3xl font-semibold">Concept map</h1>
           </div>
-          <button
-            type="button"
-            onClick={handleGenerate}
-            disabled={generateConcepts.isPending}
-            className="rounded-full border border-ink-700 bg-ink-900/80 px-4 py-2 text-sm font-medium text-mist-200 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {generateConcepts.isPending ? "Generating..." : "Generate concepts"}
-          </button>
+          <div className="flex flex-wrap justify-end gap-2">
+            <button
+              type="button"
+              onClick={handleGenerate}
+              disabled={generateConcepts.isPending || createAssessment.isPending || updateAssessmentConfig.isPending}
+              className="rounded-full border border-ink-700 bg-ink-900/80 px-4 py-2 text-sm font-medium text-mist-200 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {generateConcepts.isPending ? "Generating..." : "Generate concepts"}
+            </button>
+            <button
+              type="button"
+              onClick={handleCreateAssessment}
+              disabled={createAssessment.isPending || updateAssessmentConfig.isPending}
+              className="rounded-full bg-gradient-to-r from-sky-500 to-emerald-400 px-4 py-2 text-sm font-semibold text-[#062319] shadow-lg shadow-emerald-950/20 transition-colors hover:from-sky-400 hover:to-emerald-300 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {createAssessment.isPending || updateAssessmentConfig.isPending ? "Preparing quiz..." : "Create assessment & write quiz"}
+            </button>
+          </div>
         </div>
 
         <div className="mt-8 space-y-5">

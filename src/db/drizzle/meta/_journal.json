@@ -8,6 +8,13 @@
       "when": 1789577364555,
       "tag": "0000_funny_obadiah_stane",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789639444760,
+      "tag": "0001_nosy_talkback",
+      "breakpoints": true
     }
   ]
 }
