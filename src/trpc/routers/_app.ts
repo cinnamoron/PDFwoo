@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { baseProcedure, createTRPCRouter } from "../init";
+import { conceptsRouter } from "./concepts";
 import { materialsRouter } from "./materials";
 
 export const appRouter = createTRPCRouter({
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
       };
     }), // still kept for testing
   materials: materialsRouter,
+  concepts: conceptsRouter,
 });
 // export type definition of API
 export type AppRouter = typeof appRouter;

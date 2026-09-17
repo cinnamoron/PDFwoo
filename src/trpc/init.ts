@@ -1,7 +1,6 @@
 import { initTRPC, TRPCError } from "@trpc/server";
+import superjson from "superjson";
 import { auth } from "@/lib/auth";
-import { db } from "@/index";
-import { eq } from "drizzle-orm";
 
 export const createTRPCContext = async (opts: { headers: Headers }) => {
     const session = await auth.api.getSession({ headers: opts.headers });
@@ -11,7 +10,7 @@ export const createTRPCContext = async (opts: { headers: Headers }) => {
 const t = initTRPC
     .context<Awaited<ReturnType<typeof createTRPCContext>>>()
     .create({
-        // transformer: superjson,
+        transformer: superjson,
     });
 
 export const createTRPCRouter = t.router;

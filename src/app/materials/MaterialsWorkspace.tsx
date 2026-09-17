@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { useAppSelector } from "@/hooks/hooks";
 import { authClient } from "@/lib/auth-client";
@@ -9,21 +9,32 @@ import { useTRPC } from "@/trpc/client";
 
 const maxFileSize = 25 * 1024 * 1024;
 
-type UploadState = "idle" | "selected" | "uploading" | "success" | "error";
+type UploadState = "idle" | "selected" | "uploading" | "processing" | "success" | "error";
 
 export default function MaterialsWorkspace() {
   const role = useAppSelector((state) => state.nav.role);
   const { data: session, isPending: isSessionPending } = authClient.useSession();
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const requestUpload = useMutation(trpc.materials.requestUpload.mutationOptions());
   const uploadFileMutation = useMutation(trpc.materials.uploadFile.mutationOptions());
   const confirmUpload = useMutation(trpc.materials.confirmUpload.mutationOptions());
+  const extractText = useMutation(trpc.materials.extractText.mutationOptions());
+  const deleteMaterial = useMutation({
+    ...trpc.materials.delete.mutationOptions(),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: trpc.materials.list.queryKey() });
+    },
+  });
+  const materialsQuery = useQuery(trpc.materials.list.queryOptions());
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
   const [progress, setProgress] = useState(0);
   const [message, setMessage] = useState("");
   const [isDragging, setIsDragging] = useState(false);
+
+  const materials = materialsQuery.data ?? [];
 
   if (isSessionPending || !session) {
     return <main className="min-h-[calc(100vh-72px)] bg-ink-950" aria-label="Loading study materials" />;
@@ -85,11 +96,34 @@ export default function MaterialsWorkspace() {
         mimeType: file.type as "application/pdf",
       });
       await confirmUpload.mutateAsync({ materialId });
+      setUploadState("processing");
+      setProgress(100);
+      setMessage("Processing your material...");
+
+      const result = await extractText.mutateAsync({ materialId });
+      if (result.status === "failed") {
+        setUploadState("error");
+        setMessage(result.extractionError ?? "The PDF could not be processed.");
+        return;
+      }
+
       setUploadState("success");
       setProgress(100);
       setMessage("Your material is ready for assessment creation.");
     } catch (error) {
       setUploadState("error");
+      setMessage(getErrorMessage(error));
+    }
+  }
+
+  async function handleDeleteMaterial(materialId: string) {
+    const confirmed = window.confirm("Delete this material from your library?");
+    if (!confirmed) return;
+
+    try {
+      await deleteMaterial.mutateAsync({ materialId });
+      setMessage("Material deleted.");
+    } catch (error) {
       setMessage(getErrorMessage(error));
     }
   }
@@ -123,13 +157,14 @@ export default function MaterialsWorkspace() {
             {file && (
               <div className="mt-4 flex items-center justify-between gap-4 border border-ink-800 bg-ink-900/70 p-4">
                 <div className="flex min-w-0 items-center gap-3"><PdfIcon /><div className="min-w-0"><p className="truncate text-sm font-semibold">{file.name}</p><p className="mt-1 text-xs text-mist-400">{formatBytes(file.size)}</p></div></div>
-                {uploadState !== "uploading" && uploadState !== "success" && <button type="button" onClick={() => { setFile(null); setUploadState("idle"); setMessage(""); }} className="shrink-0 text-sm text-mist-400 hover:text-white">Remove</button>}
+                {uploadState !== "uploading" && uploadState !== "processing" && uploadState !== "success" && <button type="button" onClick={() => { setFile(null); setUploadState("idle"); setMessage(""); }} className="shrink-0 text-sm text-mist-400 hover:text-white">Remove</button>}
               </div>
             )}
 
             {uploadState === "uploading" && <div className="mt-5"><div className="flex justify-between text-sm"><span className="text-mist-300">Uploading source</span><span className="text-bloom-500">{progress}%</span></div><div className="mt-3 h-2 overflow-hidden bg-ink-800"><div className="h-full bg-gradient-to-r from-brand-600 to-bloom-600 transition-[width] duration-300" style={{ width: `${progress}%` }} /></div></div>}
-            {message && <p className={`mt-4 text-sm ${uploadState === "success" ? "text-emerald-300" : "text-red-300"}`} role="status">{message}</p>}
-            <button type="button" onClick={uploadFile} disabled={!file || uploadState === "uploading" || uploadState === "success"} className="mt-7 rounded-full bg-gradient-to-r from-brand-600 to-bloom-600 px-6 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_var(--color-brand-600)] transition-opacity disabled:cursor-not-allowed disabled:opacity-40">{uploadState === "uploading" ? "Uploading..." : uploadState === "success" ? "Material uploaded" : "Upload material"}</button>
+            {uploadState === "processing" && <div className="mt-5 rounded-2xl border border-bloom-500/35 bg-bloom-500/10 px-4 py-3 text-sm text-bloom-200">Processing your material...</div>}
+            {message && <p className={`mt-4 text-sm ${uploadState === "success" ? "text-emerald-300" : uploadState === "error" ? "text-red-300" : "text-bloom-200"}`} role="status">{message}</p>}
+            <button type="button" onClick={uploadFile} disabled={!file || uploadState === "uploading" || uploadState === "processing" || uploadState === "success"} className="mt-7 rounded-full bg-gradient-to-r from-brand-600 to-bloom-600 px-6 py-3.5 text-sm font-semibold text-white shadow-[0_10px_30px_-12px_var(--color-brand-600)] transition-opacity disabled:cursor-not-allowed disabled:opacity-40">{uploadState === "uploading" ? "Uploading..." : uploadState === "processing" ? "Processing..." : uploadState === "success" ? "Material uploaded" : "Upload material"}</button>
           </section>
 
           <aside className="border-l border-ink-800 pl-0 lg:mt-24 lg:pl-8">
@@ -139,10 +174,65 @@ export default function MaterialsWorkspace() {
             </ol>
           </aside>
         </div>
+
+        <section className="mt-12 rounded-[2rem] border border-ink-800 bg-ink-900/55 p-5 sm:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-brand-500">Materials</p>
+              <h2 className="mt-2 text-2xl font-semibold">Source library</h2>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-3">
+            {materials.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-ink-700 bg-ink-950/30 p-6 text-sm text-mist-400">No materials uploaded yet.</div>
+            ) : (
+              materials.map((material) => (
+                <div key={material.id} className="flex flex-col gap-3 rounded-2xl border border-ink-800 bg-ink-950/35 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-3">
+                      <PdfIcon />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-white">{material.fileName}</p>
+                        <p className="mt-1 text-xs text-mist-400">{new Date(material.createdAt).toLocaleDateString()} · {formatBytes(material.fileSize)}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 self-start sm:self-center">
+                    <span className={`inline-flex rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] ${statusClasses[material.status]}`}>
+                      {material.status}
+                    </span>
+                    {material.status === "ready" && (
+                      <Link href={`/materials/${material.id}/concepts`} className="inline-flex rounded-full border border-brand-500/50 bg-brand-500/10 px-3 py-2 text-xs font-semibold text-brand-200 transition-colors hover:border-brand-400 hover:text-white">
+                        Review concepts
+                      </Link>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteMaterial(material.id)}
+                      className="inline-flex rounded-full border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition-colors hover:border-red-400 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={deleteMaterial.isPending}
+                    >
+                      {deleteMaterial.isPending ? "Deleting..." : "Delete"}
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </div>
     </main>
   );
 }
+
+const statusClasses: Record<string, string> = {
+  uploading: "border-amber-400/30 bg-amber-400/10 text-amber-200",
+  processing: "border-bloom-500/30 bg-bloom-500/10 text-bloom-200",
+  ready: "border-emerald-400/30 bg-emerald-500/10 text-emerald-200",
+  failed: "border-red-400/30 bg-red-500/10 text-red-200",
+};
 
 async function fileToBase64(file: File, onProgress: (value: number) => void) {
   const buffer = await file.arrayBuffer();

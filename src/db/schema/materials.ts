@@ -12,9 +12,11 @@ export const studyMaterials = pgTable("study_materials", {
   fileSize: integer("file_size").notNull(),
   mimeType: text("mime_type").notNull(),
   status: text("status")
-    .$type<"uploading" | "ready" | "failed">()
+    .$type<"uploading" | "processing" | "ready" | "failed">()
     .default("uploading")
     .notNull(),
+  extractedText: text("extracted_text"),
+  extractionError: text("extraction_error"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
