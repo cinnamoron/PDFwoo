@@ -385,9 +385,10 @@ export default function AssessmentWorkspace({ materialId, assessmentId }: { mate
                         <button
                           type="button"
                           onClick={() => regenerateQuestion.mutate({ id: question.id })}
+                          disabled={regenerateQuestion.isPending}
                           className="rounded-full border border-ink-700 bg-ink-900/80 px-2.5 py-1.5 text-xs font-medium text-mist-200"
                         >
-                          Regenerate
+                          {regenerateQuestion.isPending ? "Regenerating..." : "Regenerate"}
                         </button>
                         <button
                           type="button"
