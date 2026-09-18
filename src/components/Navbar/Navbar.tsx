@@ -17,12 +17,13 @@ export default function Navbar() {
       ? [
           { href: "/dashboard", label: "Dashboard" },
           { href: "/materials", label: "Materials" },
+          { href: "/classes", label: "Classes" },
           { href: "/assessments", label: "Assessments" },
           { href: "/analytics", label: "Analytics" },
         ]
       : [
           { href: "/dashboard", label: "Dashboard" },
-          { href: "/assessments", label: "Assessments" },
+          { href: "/practice", label: "Practice" },
           { href: "/progress", label: "My progress" },
         ];
 

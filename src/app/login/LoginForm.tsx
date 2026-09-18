@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import type { FormEvent } from "react";
+import { type FormEvent, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import { authClient } from "@/lib/auth-client";
 import {
@@ -27,6 +27,22 @@ export default function LoginForm() {
   );
   const isSubmitting = status === "submitting";
   const isSignup = mode === "signup";
+
+  useEffect(() => {
+    const emailFromQuery = searchParams.get("email")?.trim();
+    if (emailFromQuery) {
+      dispatch(setEmail(emailFromQuery));
+    }
+    if (!searchParams.get("mode") && !emailFromQuery) {
+      dispatch(setAuthMode("signup"));
+    }
+    if (searchParams.get("mode") === "login") {
+      dispatch(setAuthMode("login"));
+    }
+    if (searchParams.get("mode") === "signup") {
+      dispatch(setAuthMode("signup"));
+    }
+  }, [dispatch, searchParams]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

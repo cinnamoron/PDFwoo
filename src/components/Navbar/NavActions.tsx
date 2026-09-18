@@ -112,10 +112,10 @@ export default function NavActions() {
       </div>
 
       <a
-        href={role === "teacher" ? "/assessments/new" : "/practice"}
+        href={role === "teacher" ? "/classes" : "/practice"}
         className="rounded-full bg-gradient-to-r from-brand-600 to-bloom-600 px-4 py-2 text-sm font-semibold text-white shadow-[0_8px_24px_-8px_var(--color-brand-600)] transition-transform motion-safe:hover:scale-[1.03] motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/70 focus-visible:ring-offset-2 focus-visible:ring-offset-ink-950"
       >
-        {role === "teacher" ? "New assessment" : "Practice weak spots"}
+        {role === "teacher" ? "Classes" : "Practice weak spots"}
       </a>
 
       <div className="relative">

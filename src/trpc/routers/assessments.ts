@@ -198,4 +198,12 @@ export const assessmentsRouter = createTRPCRouter({
         .where(eq(assessments.materialId, material.id))
         .orderBy(desc(assessments.createdAt));
     }),
+
+  listMine: protectedProcedure.query(async ({ ctx }) => {
+    return db
+      .select()
+      .from(assessments)
+      .where(eq(assessments.teacherId, ctx.session.user.id))
+      .orderBy(desc(assessments.createdAt));
+  }),
 });

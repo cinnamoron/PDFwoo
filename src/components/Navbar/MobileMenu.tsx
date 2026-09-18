@@ -70,10 +70,10 @@ export default function MobileMenu({ links }: { links: NavLinkItem[] }) {
             </div>
 
             <a
-              href={role === "teacher" ? "/assessments/new" : "/practice"}
+              href={role === "teacher" ? "/classes" : "/practice"}
               className="mt-2 rounded-xl bg-gradient-to-r from-brand-600 to-bloom-600 px-4 py-2.5 text-center text-sm font-semibold text-white"
             >
-              {role === "teacher" ? "New assessment" : "Practice weak spots"}
+              {role === "teacher" ? "Classes" : "Practice weak spots"}
             </a>
           </>
         )}

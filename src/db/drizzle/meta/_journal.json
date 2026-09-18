@@ -15,6 +15,13 @@
       "when": 1789639444760,
       "tag": "0001_nosy_talkback",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789709606147,
+      "tag": "0002_yummy_the_twelve",
+      "breakpoints": true
     }
   ]
 }

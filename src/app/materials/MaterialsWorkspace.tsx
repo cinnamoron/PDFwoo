@@ -40,19 +40,6 @@ export default function MaterialsWorkspace() {
     return <main className="min-h-[calc(100vh-72px)] bg-ink-950" aria-label="Loading study materials" />;
   }
 
-  if (role !== "teacher") {
-    return (
-      <main className="min-h-[calc(100vh-72px)] bg-ink-950 px-4 py-16 text-white sm:px-6 lg:px-8">
-        <section className="mx-auto max-w-3xl border border-ink-800 bg-ink-900/60 p-8 sm:p-12">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-bloom-500">Teacher workspace</p>
-          <h1 className="mt-4 text-3xl font-semibold tracking-tight">Study materials are teacher-managed.</h1>
-          <p className="mt-4 max-w-xl leading-7 text-mist-400">Switch to the teacher view to upload source PDFs for your assessments.</p>
-          <Link href="/dashboard" className="mt-8 inline-flex rounded-full bg-gradient-to-r from-brand-600 to-bloom-600 px-5 py-3 text-sm font-semibold text-white">Back to dashboard</Link>
-        </section>
-      </main>
-    );
-  }
-
   function chooseFile(nextFile: File | undefined) {
     setMessage("");
     setUploadState("idle");
@@ -134,9 +121,9 @@ export default function MaterialsWorkspace() {
         <div className="grid gap-10 lg:grid-cols-[1fr_0.68fr] lg:items-start">
           <section>
             <Link href="/dashboard" className="text-sm text-mist-400 transition-colors hover:text-white">← Dashboard</Link>
-            <p className="mt-10 text-xs font-semibold uppercase tracking-[0.18em] text-bloom-500">Source library / Teacher view</p>
+            <p className="mt-10 text-xs font-semibold uppercase tracking-[0.18em] text-bloom-500">Source library / {role === "teacher" ? "Teacher view" : "Student practice"}</p>
             <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight sm:text-6xl">Bring the material into focus.</h1>
-            <p className="mt-5 max-w-xl text-base leading-7 text-mist-400">Upload a lecture, chapter, or study guide as a PDF. Keep the source close to the assessment it will shape.</p>
+            <p className="mt-5 max-w-xl text-base leading-7 text-mist-400">Upload a lecture, chapter, or study guide as a PDF. Keep the source close to {role === "teacher" ? "the assessment it will shape" : "the practice quizzes it will shape"}.</p>
 
             <div
               onDragEnter={(event) => { event.preventDefault(); setIsDragging(true); }}

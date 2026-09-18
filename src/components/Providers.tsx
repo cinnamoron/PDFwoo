@@ -2,6 +2,7 @@
 import { TRPCReactProvider } from "@/trpc/client";
 import { Provider as ReduxProvider } from "react-redux";
 import { store } from "@/redux/store";
+import ThemeController from "@/components/ThemeController";
 
 export default function Providers(
   props: Readonly<{
@@ -10,7 +11,9 @@ export default function Providers(
 ) {
   return (
     <ReduxProvider store={store}>
-      <TRPCReactProvider>{props.children}</TRPCReactProvider>
+      <TRPCReactProvider>
+        <ThemeController>{props.children}</ThemeController>
+      </TRPCReactProvider>
     </ReduxProvider>
   );
 }
