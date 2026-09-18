@@ -105,12 +105,14 @@ export const assignmentsRouter = createTRPCRouter({
       .select({
         assignment: assessmentAssignments,
         assessmentTitle: assessments.title,
+        className: classes.name,
         score: assignmentAttempts.score,
         completed: assignmentAttempts.status,
         dueAt: assessmentAssignments.dueAt,
       })
       .from(assessmentAssignments)
       .innerJoin(assessments, eq(assessments.id, assessmentAssignments.assessmentId))
+      .innerJoin(classes, eq(classes.id, assessmentAssignments.classId))
       .leftJoin(assignmentAttempts, and(eq(assignmentAttempts.assignmentId, assessmentAssignments.id), eq(assignmentAttempts.studentId, ctx.session.user.id)))
       .where(sql`${assessmentAssignments.classId} IN (${sql.join(classIds.map((id) => sql`${id}`), sql`, `)})`)
       .orderBy(desc(assessmentAssignments.dueAt));
@@ -118,6 +120,7 @@ export const assignmentsRouter = createTRPCRouter({
     return rows.map((row) => ({
       ...row.assignment,
       assessmentTitle: row.assessmentTitle,
+      className: row.className,
       dueAt: row.dueAt,
       completed: row.completed ?? null,
       score: row.score ?? null,

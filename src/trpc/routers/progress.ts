@@ -6,7 +6,7 @@ import { createTRPCRouter, protectedProcedure } from "../init";
 
 export const progressRouter = createTRPCRouter({
   myConceptStats: protectedProcedure.query(async ({ ctx }) => {
-    const map = new Map<string, { label: string; total: number; correct: number; attempts: number }>();
+    const map = new Map<string, { key: string; label: string; total: number; correct: number; attempts: number }>();
 
     const assignmentRows = await db
       .select({
@@ -23,7 +23,7 @@ export const progressRouter = createTRPCRouter({
 
     for (const row of assignmentRows) {
       const key = `concept:${row.conceptId}`;
-      const bucket = map.get(key) ?? { label: row.conceptName, total: 0, correct: 0, attempts: 0 };
+      const bucket = map.get(key) ?? { key, label: row.conceptName, total: 0, correct: 0, attempts: 0 };
       bucket.total += 1;
       bucket.attempts += 1;
       if (row.isCorrect) bucket.correct += 1;
@@ -47,7 +47,7 @@ export const progressRouter = createTRPCRouter({
 
     for (const row of practiceRows) {
       const key = row.source === "concept" && row.conceptId ? `concept:${row.conceptId}` : `topic:${(row.customLabel ?? "unknown").toLowerCase()}`;
-      const bucket = map.get(key) ?? { label: row.source === "concept" ? (row.conceptName ?? "Unknown concept") : (row.customLabel ?? "Custom topic"), total: 0, correct: 0, attempts: 0 };
+      const bucket = map.get(key) ?? { key, label: row.source === "concept" ? (row.conceptName ?? "Unknown concept") : (row.customLabel ?? "Custom topic"), total: 0, correct: 0, attempts: 0 };
       bucket.total += 1;
       bucket.attempts += 1;
       if (row.isCorrect) bucket.correct += 1;
@@ -62,6 +62,7 @@ export const progressRouter = createTRPCRouter({
       else if (accuracy < 85) level = "good";
 
       return {
+        key: item.key,
         label: item.label,
         accuracy,
         level,

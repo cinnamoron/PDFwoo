@@ -46,11 +46,12 @@ export const practiceRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST", message: "Add at least one concept or custom topic." });
       }
 
-      if (conceptIds.length > 0 && !input.materialId) {
+      const materialId = input.materialId?.trim() || null;
+
+      if (conceptIds.length > 0 && !materialId) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "A material is required when using concept topics." });
       }
 
-      const materialId = input.materialId ?? null;
       let materialName = "Practice";
       if (materialId) {
         const [material] = await db.select().from(studyMaterials).where(eq(studyMaterials.id, materialId));
@@ -227,6 +228,46 @@ export const practiceRouter = createTRPCRouter({
         .where(eq(practiceSessions.id, session.id));
 
       return { score, totalQuestions: questionsForSession.length };
+    }),
+
+  submitAnswer: protectedProcedure
+    .input(z.object({ sessionId: z.string().min(1), questionId: z.string().min(1), selectedOptionIndex: z.number().int().min(0).max(3) }))
+    .mutation(async ({ ctx, input }) => {
+      const session = await getSessionForOwner(input.sessionId, ctx.session.user.id);
+      if (session.status === "completed") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "This practice session is already completed." });
+      }
+
+      const [question] = await db.select().from(practiceQuestions).where(and(eq(practiceQuestions.id, input.questionId), eq(practiceQuestions.practiceSessionId, session.id)));
+      if (!question) throw new TRPCError({ code: "BAD_REQUEST", message: "Question does not belong to this session." });
+
+      const [existingAnswer] = await db.select().from(practiceAnswers).where(and(eq(practiceAnswers.questionId, question.id), eq(practiceAnswers.practiceSessionId, session.id)));
+      if (existingAnswer) throw new TRPCError({ code: "BAD_REQUEST", message: "This question has already been answered." });
+
+      const isCorrect = input.selectedOptionIndex === question.correctOptionIndex;
+      await db.insert(practiceAnswers).values({
+        id: randomUUID(),
+        practiceSessionId: session.id,
+        questionId: question.id,
+        selectedOptionIndex: input.selectedOptionIndex,
+        isCorrect,
+      });
+
+      const answeredRows = await db.select().from(practiceAnswers).where(eq(practiceAnswers.practiceSessionId, session.id));
+      const completed = answeredRows.length >= session.totalQuestions;
+      const score = Math.round((answeredRows.filter((answer) => answer.isCorrect).length / session.totalQuestions) * 100);
+
+      if (completed) {
+        await db.update(practiceSessions).set({ status: "completed", score, completedAt: new Date() }).where(eq(practiceSessions.id, session.id));
+      }
+
+      return {
+        isCorrect,
+        correctOptionIndex: question.correctOptionIndex,
+        explanation: question.explanation,
+        status: completed ? "completed" as const : "in_progress" as const,
+        score,
+      };
     }),
 
   listMine: protectedProcedure.query(async ({ ctx }) => {

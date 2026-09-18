@@ -38,6 +38,15 @@ export default function NavActions() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const { data: session, isPending } = authClient.useSession();
 
+  function switchRole(nextRole: "teacher" | "student") {
+    if (nextRole === role) return;
+    const confirmed = window.confirm(`Switch to the ${nextRole} dashboard? The page will refresh.`);
+    if (!confirmed) return;
+    window.localStorage.setItem("conceptiq-role", nextRole);
+    dispatch(setRole(nextRole));
+    window.location.href = "/dashboard";
+  }
+
   async function handleSignOut() {
     setIsSigningOut(true);
     const result = await authClient.signOut();
@@ -98,7 +107,7 @@ export default function NavActions() {
           <button
             key={r}
             type="button"
-            onClick={() => dispatch(setRole(r))}
+            onClick={() => switchRole(r)}
             aria-pressed={role === r}
             className={`rounded-full px-3 py-1.5 capitalize transition-colors motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/70 ${
               role === r

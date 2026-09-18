@@ -14,6 +14,15 @@ export default function MobileMenu({ links }: { links: NavLinkItem[] }) {
   const pathname = usePathname();
   const { data: session, isPending } = authClient.useSession();
 
+  function switchRole(nextRole: "teacher" | "student") {
+    if (nextRole === role) return;
+    const confirmed = window.confirm(`Switch to the ${nextRole} dashboard? The page will refresh.`);
+    if (!confirmed) return;
+    window.localStorage.setItem("conceptiq-role", nextRole);
+    dispatch(setRole(nextRole));
+    window.location.href = "/dashboard";
+  }
+
   return (
     <div
       id="mobile-nav-panel"
@@ -58,7 +67,7 @@ export default function MobileMenu({ links }: { links: NavLinkItem[] }) {
                 <button
                   key={r}
                   type="button"
-                  onClick={() => dispatch(setRole(r))}
+                  onClick={() => switchRole(r)}
                   aria-pressed={role === r}
                   className={`flex-1 rounded-lg px-3 py-2 capitalize ${
                     role === r ? "bg-gradient-to-r from-brand-600 to-bloom-600 text-white" : "text-mist-400"
