@@ -12,9 +12,10 @@ export default function ClassWorkspace({ classId }: { classId: string }) {
   const [dueAt, setDueAt] = useState("");
   const [selectedAssessmentId, setSelectedAssessmentId] = useState("");
 
-  const classQuery = useQuery(trpc.classes.get.queryOptions({ classId }));
-  const assessmentsQuery = useQuery(trpc.assessments.listMine.queryOptions());
-  const assignmentRowsQuery = useQuery(trpc.assignments.forClass.queryOptions({ classId }));
+  const queryEnabled = !isPending && Boolean(session);
+  const classQuery = useQuery(trpc.classes.get.queryOptions({ classId }, { enabled: queryEnabled }));
+  const assessmentsQuery = useQuery(trpc.assessments.listMine.queryOptions(undefined, { enabled: queryEnabled }));
+  const assignmentRowsQuery = useQuery(trpc.assignments.forClass.queryOptions({ classId }, { enabled: queryEnabled }));
   const inviteMutation = useMutation(trpc.classes.invite.mutationOptions());
   const assignMutation = useMutation(trpc.assignments.assign.mutationOptions());
 

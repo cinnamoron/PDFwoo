@@ -5,14 +5,17 @@ import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useTRPC } from "@/trpc/client";
+import { getUserFacingErrorMessage } from "@/lib/error-message";
+import { authClient } from "@/lib/auth-client";
 
 export default function NewPracticeWorkspace() {
   const trpc = useTRPC();
   const router = useRouter();
-  const materialsQuery = useQuery(trpc.materials.list.queryOptions());
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const materialsQuery = useQuery(trpc.materials.list.queryOptions(undefined, { enabled: !isSessionPending && Boolean(session) }));
   const materials = (materialsQuery.data ?? []).filter((material) => material.status === "ready");
   const [materialId, setMaterialId] = useState("");
-  const conceptsQuery = useQuery(trpc.concepts.listByMaterial.queryOptions({ materialId }, { enabled: Boolean(materialId) }));
+  const conceptsQuery = useQuery(trpc.concepts.listByMaterial.queryOptions({ materialId }, { enabled: !isSessionPending && Boolean(session) && Boolean(materialId) }));
   const [conceptIds, setConceptIds] = useState<string[]>([]);
   const [customTopic, setCustomTopic] = useState("");
   const [customTopics, setCustomTopics] = useState<string[]>([]);
@@ -68,7 +71,7 @@ export default function NewPracticeWorkspace() {
 
           <section className="rounded-2xl border border-ink-800 bg-ink-900/55 p-5 sm:p-6"><label htmlFor="count" className="text-sm font-semibold">Question count</label><input id="count" type="number" min={1} max={200} value={numQuestions} onChange={(event) => setNumQuestions(Number(event.target.value))} className="mt-3 h-12 w-full rounded-xl border border-ink-700 bg-ink-950 px-4 focus:border-brand-500 focus:outline-none" /><div className="mt-3 flex flex-wrap gap-2">{[5, 10, 15, 20].map((count) => <button key={count} type="button" onClick={() => setNumQuestions(count)} className={`rounded-full border px-3 py-1.5 text-xs font-semibold ${numQuestions === count ? "border-brand-500 bg-brand-500/15 text-brand-200" : "border-ink-700 text-mist-400"}`}>{count}</button>)}</div></section>
 
-          {createPractice.error && <p className="text-sm text-red-300" role="alert">{createPractice.error.message}</p>}
+          {createPractice.error && <p className="text-sm text-red-300" role="alert">{getUserFacingErrorMessage(createPractice.error)}</p>}
           <button type="submit" disabled={!canSubmit || createPractice.isPending} className="w-full rounded-xl bg-gradient-to-r from-brand-600 to-bloom-600 px-5 py-3.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40">{createPractice.isPending ? "Generating questions..." : "Generate practice session"}</button>
         </form>
       </div>

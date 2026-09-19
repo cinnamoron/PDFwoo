@@ -13,7 +13,7 @@ export default function ClassesWorkspace() {
   const { data: session, isPending } = authClient.useSession();
   const [name, setName] = useState("");
 
-  const classesQuery = useQuery(trpc.classes.myClasses.queryOptions());
+  const classesQuery = useQuery(trpc.classes.myClasses.queryOptions(undefined, { enabled: !isPending && Boolean(session) }));
   const createClass = useMutation(trpc.classes.create.mutationOptions());
 
   if (isPending || !session) {

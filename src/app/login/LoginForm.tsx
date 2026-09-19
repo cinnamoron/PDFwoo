@@ -21,6 +21,8 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const requiresSignIn = /^\/(materials|assessments|classes|analytics|progress|practice|assignments|settings)(\/|$)/.test(callbackUrl);
+  const requestedFeature = callbackUrl.split("/")[1]?.replace(/^[a-z]/, (letter) => letter.toUpperCase());
   const dispatch = useAppDispatch();
   const { mode, name, email, password, confirmPassword, error, status } = useAppSelector(
     (state) => state.auth
@@ -34,7 +36,7 @@ export default function LoginForm() {
       dispatch(setEmail(emailFromQuery));
     }
     if (!searchParams.get("mode") && !emailFromQuery) {
-      dispatch(setAuthMode("signup"));
+      dispatch(setAuthMode(requiresSignIn ? "login" : "signup"));
     }
     if (searchParams.get("mode") === "login") {
       dispatch(setAuthMode("login"));
@@ -42,7 +44,7 @@ export default function LoginForm() {
     if (searchParams.get("mode") === "signup") {
       dispatch(setAuthMode("signup"));
     }
-  }, [dispatch, searchParams]);
+  }, [dispatch, requiresSignIn, searchParams]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -124,7 +126,11 @@ export default function LoginForm() {
               {isSignup ? "Create your account" : "Welcome back"}
             </h2>
             <p className="mt-2 text-sm leading-6 text-mist-400">
-              {isSignup ? "Sign up to get started." : "Sign in to access your dashboard."}
+              {requiresSignIn && !isSignup
+                ? `Sign in to access ${requestedFeature ?? "this feature"}.`
+                : isSignup
+                  ? "Sign up to get started."
+                  : "Sign in to access your dashboard."}
             </p>
 
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">

@@ -5,7 +5,7 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { db } from "@/index";
 import { model } from "@/lib/ai";
-import { concepts, practiceAnswers, practiceQuestions, practiceSessions, practiceTopics, studyMaterials, user } from "@/db/schema/schema";
+import { concepts, practiceAnswers, practiceQuestions, practiceSessions, practiceTopics, studyMaterials } from "@/db/schema/schema";
 import { createTRPCRouter, protectedProcedure } from "../init";
 
 const generatedPracticeQuestionSchema = z.object({
@@ -92,7 +92,7 @@ export const practiceRouter = createTRPCRouter({
       }
 
       const practiceTopicRows: Array<{ id: string; practiceSessionId: string; label: string; source: "concept" | "custom"; conceptId: string | null }> = [];
-      const createdQuestions: Array<any> = [];
+      const createdQuestions: Array<typeof practiceQuestions.$inferInsert> = [];
 
       for (const topic of selectedTopics) {
         const topicId = randomUUID();
@@ -118,11 +118,29 @@ export const practiceRouter = createTRPCRouter({
           prompt = `${prompt}\n\nConcept name: ${concept.name}\nConcept description: ${concept.description ?? "No description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`;
         }
 
-        const { object } = await generateObject({
-          model,
-          schema: z.array(generatedPracticeQuestionSchema),
-          prompt,
-        });
+        let object: unknown;
+        try {
+          ({ object } = await generateObject({
+            model,
+            maxRetries: 0,
+            schema: z.array(generatedPracticeQuestionSchema),
+            prompt,
+          }));
+        } catch (error) {
+          await db.delete(practiceSessions).where(eq(practiceSessions.id, session.id));
+          const statusCode = typeof error === "object" && error !== null && "statusCode" in error
+            ? error.statusCode
+            : typeof error === "object" && error !== null && "lastError" in error && typeof error.lastError === "object" && error.lastError !== null && "statusCode" in error.lastError
+              ? error.lastError.statusCode
+              : undefined;
+          if (statusCode === 429) {
+            throw new TRPCError({
+              code: "TOO_MANY_REQUESTS",
+              message: "Question generation is temporarily unavailable because the AI provider quota was reached. Please try again later.",
+            });
+          }
+          throw error;
+        }
 
         const generated = Array.isArray(object) ? object : [];
         for (const item of generated.slice(0, topicCount)) {
@@ -144,6 +162,22 @@ export const practiceRouter = createTRPCRouter({
       }
       if (createdQuestions.length > 0) {
         await db.insert(practiceQuestions).values(createdQuestions);
+      }
+
+      if (createdQuestions.length === 0) {
+        await db.delete(practiceTopics).where(eq(practiceTopics.practiceSessionId, session.id));
+        await db.delete(practiceSessions).where(eq(practiceSessions.id, session.id));
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "No practice questions were generated. Please try again.",
+        });
+      }
+
+      if (createdQuestions.length !== session.totalQuestions) {
+        await db
+          .update(practiceSessions)
+          .set({ totalQuestions: createdQuestions.length })
+          .where(eq(practiceSessions.id, session.id));
       }
 
       return { sessionId: session.id };
@@ -169,7 +203,7 @@ export const practiceRouter = createTRPCRouter({
           options: question.options,
           difficulty: question.difficulty,
           selectedOptionIndex: answer?.selectedOptionIndex ?? null,
-        } as any;
+        };
 
         if (session.status === "completed") {
           return {

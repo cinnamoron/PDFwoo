@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
+import { authClient } from "@/lib/auth-client";
 import { useTRPC } from "@/trpc/client";
 
 export default function PracticeWorkspace() {
   const trpc = useTRPC();
-  const sessionsQuery = useQuery(trpc.practice.listMine.queryOptions());
+  const { data: session, isPending: isSessionPending } = authClient.useSession();
+  const sessionsQuery = useQuery(trpc.practice.listMine.queryOptions(undefined, { enabled: !isSessionPending && Boolean(session) }));
   const sessions = sessionsQuery.data ?? [];
 
   return (

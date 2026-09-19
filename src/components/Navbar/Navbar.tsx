@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
 import { togglePanel } from "@/redux/slices/navSlice";
+import { authClient } from "@/lib/auth-client";
 import NavLinks, { type NavLinkItem } from "./NavLinks";
 import NavActions from "./NavActions";
 import MobileMenu from "./MobileMenu";
@@ -11,6 +12,7 @@ export default function Navbar() {
   const dispatch = useAppDispatch();
   const role = useAppSelector((s) => s.nav.role);
   const isMobileOpen = useAppSelector((s) => s.nav.openPanel === "mobileMenu");
+  const { data: session } = authClient.useSession();
 
   const links: NavLinkItem[] =
     role === "teacher"
@@ -26,6 +28,12 @@ export default function Navbar() {
           { href: "/practice", label: "Practice" },
           { href: "/progress", label: "My progress" },
         ];
+  const visibleLinks = session
+    ? links
+    : links.map((link) => ({
+        ...link,
+        href: `/login?callbackUrl=${encodeURIComponent(link.href)}`,
+      }));
 
   return (
     <header className="sticky top-0 z-50 bg-ink-950/90 backdrop-blur-md">
@@ -43,7 +51,7 @@ export default function Navbar() {
           </span>
         </Link>
 
-        <NavLinks links={links} className="hidden lg:flex" />
+        <NavLinks links={visibleLinks} className="hidden lg:flex" />
 
         <div className="flex items-center gap-2">
           <div className="hidden lg:block">
@@ -67,7 +75,7 @@ export default function Navbar() {
         />
       </nav>
 
-      <MobileMenu links={links} />
+      <MobileMenu links={visibleLinks} />
     </header>
   );
 }

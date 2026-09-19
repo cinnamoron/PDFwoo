@@ -26,7 +26,7 @@ export default function MaterialsWorkspace() {
       await queryClient.invalidateQueries({ queryKey: trpc.materials.list.queryKey() });
     },
   });
-  const materialsQuery = useQuery(trpc.materials.list.queryOptions());
+  const materialsQuery = useQuery(trpc.materials.list.queryOptions(undefined, { enabled: !isSessionPending && Boolean(session) }));
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>("idle");
