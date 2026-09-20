@@ -93,7 +93,10 @@ export const materialsRouter = createTRPCRouter({
         .where(eq(studyMaterials.id, input.materialId));
 
       if (!material) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Material not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Material not found",
+        });
       }
 
       if (material.teacherId !== ctx.session.user.id) {
@@ -102,13 +105,19 @@ export const materialsRouter = createTRPCRouter({
 
       const file = Buffer.from(input.fileData, "base64");
       if (file.length > MAX_FILE_SIZE) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "File size must be 25 MB or less" });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "File size must be 25 MB or less",
+        });
       }
 
       const storageRoot = path.resolve(process.cwd(), "storage");
       const filePath = path.resolve(storageRoot, material.fileKey);
       if (!filePath.startsWith(`${storageRoot}${path.sep}`)) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid file path" });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Invalid file path",
+        });
       }
 
       await mkdir(path.dirname(filePath), { recursive: true });
@@ -125,7 +134,10 @@ export const materialsRouter = createTRPCRouter({
         .where(eq(studyMaterials.id, input.materialId));
 
       if (!material) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Material not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Material not found",
+        });
       }
 
       if (material.teacherId !== ctx.session.user.id) {
@@ -135,7 +147,10 @@ export const materialsRouter = createTRPCRouter({
       try {
         await access(path.resolve(process.cwd(), "storage", material.fileKey));
       } catch {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Material file is not available" });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Material file is not available",
+        });
       }
 
       const [updatedMaterial] = await db
@@ -150,8 +165,15 @@ export const materialsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ materialId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const material = await getMaterialForTeacher(input.materialId, ctx.session.user.id);
-      const storagePath = path.resolve(process.cwd(), "storage", material.fileKey);
+      const material = await getMaterialForTeacher(
+        input.materialId,
+        ctx.session.user.id,
+      );
+      const storagePath = path.resolve(
+        process.cwd(),
+        "storage",
+        material.fileKey,
+      );
 
       try {
         await unlink(storagePath);
@@ -178,7 +200,10 @@ export const materialsRouter = createTRPCRouter({
         .where(eq(studyMaterials.id, input.materialId));
 
       if (!material) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Material not found" });
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Material not found",
+        });
       }
 
       if (material.teacherId !== ctx.session.user.id) {
@@ -199,7 +224,8 @@ export const materialsRouter = createTRPCRouter({
             .set({
               status: "failed",
               extractedText: null,
-              extractionError: "No readable text could be extracted from this PDF. Please upload a text-based PDF.",
+              extractionError:
+                "No readable text could be extracted from this PDF. Please upload a text-based PDF.",
             })
             .where(eq(studyMaterials.id, material.id))
             .returning();
@@ -219,7 +245,10 @@ export const materialsRouter = createTRPCRouter({
 
         return updatedMaterial;
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Unknown PDF extraction error";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Unknown PDF extraction error";
 
         const [updatedMaterial] = await db
           .update(studyMaterials)

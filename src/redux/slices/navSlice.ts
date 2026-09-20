@@ -26,7 +26,8 @@ const navSlice = createSlice({
     // of {notifications, profile, mobileMenu} open at a time for free,
     // since they all live in this single field.
     togglePanel: (state, action: PayloadAction<OpenPanel>) => {
-      state.openPanel = state.openPanel === action.payload ? "none" : action.payload;
+      state.openPanel =
+        state.openPanel === action.payload ? "none" : action.payload;
     },
     closePanel: (state) => {
       state.openPanel = "none";
@@ -41,5 +42,6 @@ const navSlice = createSlice({
   },
 });
 
-export const { togglePanel, closePanel, setRole, clearNotifications } = navSlice.actions;
+export const { togglePanel, closePanel, setRole, clearNotifications } =
+  navSlice.actions;
 export default navSlice.reducer;

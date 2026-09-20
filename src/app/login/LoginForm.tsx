@@ -21,12 +21,16 @@ export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
-  const requiresSignIn = /^\/(materials|assessments|classes|analytics|progress|practice|assignments|settings)(\/|$)/.test(callbackUrl);
-  const requestedFeature = callbackUrl.split("/")[1]?.replace(/^[a-z]/, (letter) => letter.toUpperCase());
+  const requiresSignIn =
+    /^\/(materials|assessments|classes|analytics|progress|practice|assignments|settings)(\/|$)/.test(
+      callbackUrl,
+    );
+  const requestedFeature = callbackUrl
+    .split("/")[1]
+    ?.replace(/^[a-z]/, (letter) => letter.toUpperCase());
   const dispatch = useAppDispatch();
-  const { mode, name, email, password, confirmPassword, error, status } = useAppSelector(
-    (state) => state.auth
-  );
+  const { mode, name, email, password, confirmPassword, error, status } =
+    useAppSelector((state) => state.auth);
   const isSubmitting = status === "submitting";
   const isSignup = mode === "signup";
 
@@ -65,12 +69,21 @@ export default function LoginForm() {
         });
 
         if (result.error) {
-          dispatch(signupFailed(result.error.message || "We could not create your account. Please try again."));
+          dispatch(
+            signupFailed(
+              result.error.message ||
+                "We could not create your account. Please try again.",
+            ),
+          );
         } else {
           router.replace(callbackUrl);
         }
       } catch {
-        dispatch(signupFailed("We could not reach the sign-up service. Please try again."));
+        dispatch(
+          signupFailed(
+            "We could not reach the sign-up service. Please try again.",
+          ),
+        );
       }
       return;
     }
@@ -84,24 +97,41 @@ export default function LoginForm() {
       });
 
       if (result.error) {
-        dispatch(loginFailed(result.error.message || "We could not sign you in. Check your details and try again."));
+        dispatch(
+          loginFailed(
+            result.error.message ||
+              "We could not sign you in. Check your details and try again.",
+          ),
+        );
       } else {
         router.replace(callbackUrl);
       }
     } catch {
-      dispatch(loginFailed("We could not reach the sign-in service. Please try again."));
+      dispatch(
+        loginFailed(
+          "We could not reach the sign-in service. Please try again.",
+        ),
+      );
     }
   }
 
   return (
     <main className="relative flex min-h-[calc(100vh-72px)] flex-1 items-center justify-center overflow-hidden bg-ink-950 px-4 py-12 sm:px-6 lg:px-8">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,var(--color-ink-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-ink-800)_1px,transparent_1px)] [background-size:48px_48px]" />
-      <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-1/4 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-40 [background-image:linear-gradient(to_right,var(--color-ink-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-ink-800)_1px,transparent_1px)] [background-size:48px_48px]"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-1/4 h-72 w-72 -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl"
+      />
 
       <section className="relative grid w-full max-w-5xl overflow-hidden rounded-3xl border border-ink-700/70 bg-ink-900/90 shadow-2xl shadow-black/30 lg:grid-cols-[1fr_1.05fr]">
         <div className="hidden flex-col justify-between border-r border-ink-700/70 p-10 lg:flex">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-bloom-500">ConceptIQ</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-bloom-500">
+              ConceptIQ
+            </p>
             <h1 className="mt-16 max-w-sm text-4xl font-semibold leading-tight tracking-tight text-white">
               Turn learning gaps into your next breakthrough.
             </h1>
@@ -120,7 +150,9 @@ export default function LoginForm() {
         <div className="p-6 sm:p-10">
           <div className="mx-auto max-w-md">
             <div className="lg:hidden">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-bloom-500">ConceptIQ</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-bloom-500">
+                ConceptIQ
+              </p>
             </div>
             <h2 className="mt-8 text-3xl font-semibold tracking-tight text-white lg:mt-0">
               {isSignup ? "Create your account" : "Welcome back"}
@@ -136,7 +168,12 @@ export default function LoginForm() {
             <form onSubmit={handleSubmit} className="mt-8 space-y-5">
               {isSignup && (
                 <div>
-                  <label htmlFor="name" className="text-sm font-medium text-mist-300">Full name</label>
+                  <label
+                    htmlFor="name"
+                    className="text-sm font-medium text-mist-300"
+                  >
+                    Full name
+                  </label>
                   <input
                     id="name"
                     name="name"
@@ -155,7 +192,12 @@ export default function LoginForm() {
               )}
 
               <div>
-                <label htmlFor="email" className="text-sm font-medium text-mist-300">Email address</label>
+                <label
+                  htmlFor="email"
+                  className="text-sm font-medium text-mist-300"
+                >
+                  Email address
+                </label>
                 <input
                   id="email"
                   name="email"
@@ -174,7 +216,12 @@ export default function LoginForm() {
 
               <div>
                 <div className="flex items-center justify-between gap-4">
-                  <label htmlFor="password" className="text-sm font-medium text-mist-300">Password</label>
+                  <label
+                    htmlFor="password"
+                    className="text-sm font-medium text-mist-300"
+                  >
+                    Password
+                  </label>
                 </div>
                 <input
                   id="password"
@@ -194,7 +241,12 @@ export default function LoginForm() {
 
               {isSignup && (
                 <div>
-                  <label htmlFor="confirmPassword" className="text-sm font-medium text-mist-300">Confirm password</label>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="text-sm font-medium text-mist-300"
+                  >
+                    Confirm password
+                  </label>
                   <input
                     id="confirmPassword"
                     name="confirmPassword"
@@ -213,7 +265,10 @@ export default function LoginForm() {
               )}
 
               {error && (
-                <p role="alert" className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm leading-6 text-red-200">
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-400/30 bg-red-400/10 px-4 py-3 text-sm leading-6 text-red-200"
+                >
                   {error}
                 </p>
               )}

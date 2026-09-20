@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Concept IQ
 
-## Getting Started
+Concept IQ helps teachers turn a PDF source into a ready-made question bank and classroom assignment flow. A teacher uploads a PDF, the app extracts concepts, generates assessment questions, assigns them to a class with a due date, and then tracks each student's mastery at the concept level across both assigned tests and self-directed practice. Students can choose topics they want to review, practice them, and answer assigned assessments without losing their learning signal.
 
-First, run the development server:
+## Setup
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Clone the repo.
+2. Install dependencies with Bun:
+   ```bash
+   bun install
+   ```
+3. Create a `.env` file in the project root and add the environment variables below.
+4. Run database migrations:
+   ```bash
+   bun run db:migrate
+   ```
+   Migrations also auto-run on server start via `src/instrumentation.ts`, but the manual command above is the explicit migration step.
+5. Start the app:
+   ```bash
+   bun run dev
+   ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Required and optional environment variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Create the following env values in `.env` before starting the app:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DATABASE_URL` — required. PostgreSQL connection string used by Drizzle and the app database layer.
+- `BETTER_AUTH_URL` — required for auth server configuration; used as the Better Auth base URL. The app also falls back to `http://localhost:3000` for trusted origins in local development when this is unset.
+- `NEXT_PUBLIC_APP_URL` — optional. Used when generating join links for class invites. Falls back to `http://localhost:3000`.
+- `VERCEL_URL` — optional. Used in the browser TRPC client when running behind Vercel to build the backend URL; otherwise the client falls back to `http://localhost:3000`.
+- `NEXT_RUNTIME` — runtime-provided by Next.js, not set in app code. The startup instrumentation checks it to avoid running migrations in non-Node runtimes.
 
-## Learn More
+## Stack
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js App Router, tRPC, Drizzle + Postgres, Better Auth, and the Vercel AI SDK.

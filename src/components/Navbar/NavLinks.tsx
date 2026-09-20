@@ -19,11 +19,14 @@ export default function NavLinks({
   const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
   const linkRefs = useRef<Map<string, HTMLAnchorElement>>(new Map());
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
+  const [indicator, setIndicator] = useState<{
+    left: number;
+    width: number;
+  } | null>(null);
 
   const activeHref =
-    links.find((l) => pathname === l.href || pathname?.startsWith(`${l.href}/`))?.href ??
-    links[0]?.href;
+    links.find((l) => pathname === l.href || pathname?.startsWith(`${l.href}/`))
+      ?.href ?? links[0]?.href;
 
   useLayoutEffect(() => {
     const measure = () => {
@@ -32,7 +35,10 @@ export default function NavLinks({
       if (!el || !container) return;
       const containerBox = container.getBoundingClientRect();
       const elBox = el.getBoundingClientRect();
-      setIndicator({ left: elBox.left - containerBox.left, width: elBox.width });
+      setIndicator({
+        left: elBox.left - containerBox.left,
+        width: elBox.width,
+      });
     };
     measure();
     window.addEventListener("resize", measure);
@@ -40,7 +46,11 @@ export default function NavLinks({
   }, [activeHref, links]);
 
   return (
-    <div ref={containerRef} className={`relative flex items-center gap-1 ${className}`} aria-label="Primary">
+    <div
+      ref={containerRef}
+      className={`relative flex items-center gap-1 ${className}`}
+      aria-label="Primary"
+    >
       {links.map((link) => {
         const isActive = link.href === activeHref;
         return (

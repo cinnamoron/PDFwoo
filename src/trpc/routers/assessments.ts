@@ -74,23 +74,31 @@ export const assessmentsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { material, materialConcepts } = await getMaterialWithConcepts(input.materialId, ctx.session.user.id);
+      const { material, materialConcepts } = await getMaterialWithConcepts(
+        input.materialId,
+        ctx.session.user.id,
+      );
 
       if (material.status !== "ready") {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Study material must be ready before creating an assessment.",
+          message:
+            "Study material must be ready before creating an assessment.",
         });
       }
 
       if (materialConcepts.length === 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "At least one concept is required before creating an assessment.",
+          message:
+            "At least one concept is required before creating an assessment.",
         });
       }
 
-      const title = input.title?.trim() || material.fileName.replace(/\.pdf$/i, "") || "Untitled assessment";
+      const title =
+        input.title?.trim() ||
+        material.fileName.replace(/\.pdf$/i, "") ||
+        "Untitled assessment";
       const assessmentId = randomUUID();
 
       const [created] = await db
@@ -112,7 +120,10 @@ export const assessmentsRouter = createTRPCRouter({
   get: protectedProcedure
     .input(z.object({ assessmentId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const { assessment, material } = await getAssessmentForTeacher(input.assessmentId, ctx.session.user.id);
+      const { assessment, material } = await getAssessmentForTeacher(
+        input.assessmentId,
+        ctx.session.user.id,
+      );
 
       const selectedConceptIds = await db
         .select({ conceptId: assessmentConcepts.conceptId })
@@ -147,20 +158,28 @@ export const assessmentsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { assessment, material } = await getAssessmentForTeacher(input.assessmentId, ctx.session.user.id);
+      const { assessment, material } = await getAssessmentForTeacher(
+        input.assessmentId,
+        ctx.session.user.id,
+      );
 
       const materialConcepts = await db
         .select()
         .from(concepts)
         .where(eq(concepts.materialId, material.id));
 
-      const validConceptIds = new Set(materialConcepts.map((concept) => concept.id));
-      const invalidConcepts = input.conceptIds.filter((id) => !validConceptIds.has(id));
+      const validConceptIds = new Set(
+        materialConcepts.map((concept) => concept.id),
+      );
+      const invalidConcepts = input.conceptIds.filter(
+        (id) => !validConceptIds.has(id),
+      );
 
       if (invalidConcepts.length > 0) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "One or more selected concepts do not belong to this material.",
+          message:
+            "One or more selected concepts do not belong to this material.",
         });
       }
 
@@ -173,7 +192,9 @@ export const assessmentsRouter = createTRPCRouter({
         .where(eq(assessments.id, assessment.id))
         .returning();
 
-      await db.delete(assessmentConcepts).where(eq(assessmentConcepts.assessmentId, assessment.id));
+      await db
+        .delete(assessmentConcepts)
+        .where(eq(assessmentConcepts.assessmentId, assessment.id));
 
       if (input.conceptIds.length > 0) {
         await db.insert(assessmentConcepts).values(
@@ -190,7 +211,10 @@ export const assessmentsRouter = createTRPCRouter({
   listByMaterial: protectedProcedure
     .input(z.object({ materialId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const { material } = await getMaterialWithConcepts(input.materialId, ctx.session.user.id);
+      const { material } = await getMaterialWithConcepts(
+        input.materialId,
+        ctx.session.user.id,
+      );
 
       return db
         .select()

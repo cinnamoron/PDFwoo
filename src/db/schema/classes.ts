@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 
 export const classes = pgTable("classes", {
@@ -15,20 +21,20 @@ export const classes = pgTable("classes", {
     .notNull(),
 });
 
-export const classInvites = pgTable(
-  "class_invites",
-  {
-    id: text("id").primaryKey(),
-    classId: text("class_id")
-      .notNull()
-      .references(() => classes.id, { onDelete: "cascade" }),
-    email: text("email").notNull(),
-    token: text("token").notNull().unique(),
-    status: text("status").$type<"pending" | "accepted">().default("pending").notNull(),
-    invitedAt: timestamp("invited_at").defaultNow().notNull(),
-    acceptedAt: timestamp("accepted_at"),
-  },
-);
+export const classInvites = pgTable("class_invites", {
+  id: text("id").primaryKey(),
+  classId: text("class_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  status: text("status")
+    .$type<"pending" | "accepted">()
+    .default("pending")
+    .notNull(),
+  invitedAt: timestamp("invited_at").defaultNow().notNull(),
+  acceptedAt: timestamp("accepted_at"),
+});
 
 export const classMembers = pgTable(
   "class_members",
@@ -43,7 +49,10 @@ export const classMembers = pgTable(
     joinedAt: timestamp("joined_at").defaultNow().notNull(),
   },
   (table) => ({
-    classStudentIdx: uniqueIndex("class_members_class_student_idx").on(table.classId, table.studentId),
+    classStudentIdx: uniqueIndex("class_members_class_student_idx").on(
+      table.classId,
+      table.studentId,
+    ),
   }),
 );
 

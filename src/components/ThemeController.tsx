@@ -5,7 +5,11 @@ import { useAppDispatch } from "@/hooks/hooks";
 import { useAppSelector } from "@/hooks/hooks";
 import { setRole, type UserRole } from "@/redux/slices/navSlice";
 
-export default function ThemeController({ children }: { children: React.ReactNode }) {
+export default function ThemeController({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const dispatch = useAppDispatch();
   const role = useAppSelector((state) => state.nav.role);
   const [hydrated, setHydrated] = useState(false);
@@ -18,5 +22,9 @@ export default function ThemeController({ children }: { children: React.ReactNod
     setHydrated(true);
   }, [dispatch]);
 
-  return <div className={role === "student" ? "theme-student" : ""}>{hydrated ? children : null}</div>;
+  return (
+    <div className={role === "student" ? "theme-student" : ""}>
+      {hydrated ? children : null}
+    </div>
+  );
 }

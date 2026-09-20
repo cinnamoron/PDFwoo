@@ -75,13 +75,17 @@ export const conceptsRouter = createTRPCRouter({
   generate: protectedProcedure
     .input(z.object({ materialId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const material = await getMaterialForTeacher(input.materialId, ctx.session.user.id);
+      const material = await getMaterialForTeacher(
+        input.materialId,
+        ctx.session.user.id,
+      );
       const hasExtractedText = !!material.extractedText?.trim();
 
       if (material.status !== "ready" || !hasExtractedText) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Study material must be ready and contain readable extracted text before generating concepts.",
+          message:
+            "Study material must be ready and contain readable extracted text before generating concepts.",
         });
       }
 
@@ -104,7 +108,14 @@ export const conceptsRouter = createTRPCRouter({
       });
 
       const generated = object ?? [];
-      const inserted: Array<{ id: string; materialId: string; parentConceptId: string | null; name: string; description: string | null; isIncluded: boolean }> = [];
+      const inserted: Array<{
+        id: string;
+        materialId: string;
+        parentConceptId: string | null;
+        name: string;
+        description: string | null;
+        isIncluded: boolean;
+      }> = [];
 
       for (const topConcept of generated) {
         const parentId = randomUUID();
@@ -144,7 +155,10 @@ export const conceptsRouter = createTRPCRouter({
   listByMaterial: protectedProcedure
     .input(z.object({ materialId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const material = await getMaterialForTeacher(input.materialId, ctx.session.user.id);
+      const material = await getMaterialForTeacher(
+        input.materialId,
+        ctx.session.user.id,
+      );
 
       return db
         .select()
@@ -155,7 +169,10 @@ export const conceptsRouter = createTRPCRouter({
   update: protectedProcedure
     .input(conceptUpdateSchema)
     .mutation(async ({ ctx, input }) => {
-      const { concept } = await getConceptWithMaterial(input.id, ctx.session.user.id);
+      const { concept } = await getConceptWithMaterial(
+        input.id,
+        ctx.session.user.id,
+      );
 
       const [updatedConcept] = await db
         .update(concepts)
@@ -180,13 +197,21 @@ export const conceptsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const material = await getMaterialForTeacher(input.materialId, ctx.session.user.id);
+      const material = await getMaterialForTeacher(
+        input.materialId,
+        ctx.session.user.id,
+      );
 
       if (input.parentConceptId) {
         const [parentConcept] = await db
           .select()
           .from(concepts)
-          .where(and(eq(concepts.id, input.parentConceptId), eq(concepts.materialId, material.id)));
+          .where(
+            and(
+              eq(concepts.id, input.parentConceptId),
+              eq(concepts.materialId, material.id),
+            ),
+          );
 
         if (!parentConcept) {
           throw new TRPCError({
@@ -212,7 +237,10 @@ export const conceptsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const { concept } = await getConceptWithMaterial(input.id, ctx.session.user.id);
+      const { concept } = await getConceptWithMaterial(
+        input.id,
+        ctx.session.user.id,
+      );
 
       await db.delete(concepts).where(eq(concepts.id, concept.id));
       return concept;

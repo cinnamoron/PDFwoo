@@ -7,7 +7,10 @@ import { classInvites, classMembers, classes, user } from "@/db/schema/schema";
 import { createTRPCRouter, protectedProcedure, baseProcedure } from "../init";
 
 async function getClassForTeacher(classId: string, teacherId: string) {
-  const [classRow] = await db.select().from(classes).where(eq(classes.id, classId));
+  const [classRow] = await db
+    .select()
+    .from(classes)
+    .where(eq(classes.id, classId));
 
   if (!classRow) {
     throw new TRPCError({ code: "NOT_FOUND", message: "Class not found" });
@@ -40,8 +43,13 @@ export const classesRouter = createTRPCRouter({
     const rows = await db
       .select({
         class: classes,
-        memberCount: sql<number>`count(distinct ${classMembers.id})`.as("memberCount"),
-        pendingInviteCount: sql<number>`count(distinct ${classInvites.id}) FILTER (WHERE ${classInvites.status} = 'pending')`.as("pendingInviteCount"),
+        memberCount: sql<number>`count(distinct ${classMembers.id})`.as(
+          "memberCount",
+        ),
+        pendingInviteCount:
+          sql<number>`count(distinct ${classInvites.id}) FILTER (WHERE ${classInvites.status} = 'pending')`.as(
+            "pendingInviteCount",
+          ),
       })
       .from(classes)
       .leftJoin(classMembers, eq(classMembers.classId, classes.id))
@@ -59,7 +67,10 @@ export const classesRouter = createTRPCRouter({
   get: protectedProcedure
     .input(z.object({ classId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const classRow = await getClassForTeacher(input.classId, ctx.session.user.id);
+      const classRow = await getClassForTeacher(
+        input.classId,
+        ctx.session.user.id,
+      );
 
       const invites = await db
         .select()
@@ -84,7 +95,12 @@ export const classesRouter = createTRPCRouter({
     }),
 
   invite: protectedProcedure
-    .input(z.object({ classId: z.string().min(1), email: z.string().trim().email() }))
+    .input(
+      z.object({
+        classId: z.string().min(1),
+        email: z.string().trim().email(),
+      }),
+    )
     .mutation(async ({ ctx, input }) => {
       await getClassForTeacher(input.classId, ctx.session.user.id);
       const email = input.email.toLowerCase();
@@ -92,7 +108,13 @@ export const classesRouter = createTRPCRouter({
       const [existing] = await db
         .select()
         .from(classInvites)
-        .where(and(eq(classInvites.classId, input.classId), eq(classInvites.email, email), eq(classInvites.status, "pending")));
+        .where(
+          and(
+            eq(classInvites.classId, input.classId),
+            eq(classInvites.email, email),
+            eq(classInvites.status, "pending"),
+          ),
+        );
 
       if (existing) {
         const [updated] = await db
@@ -150,13 +172,21 @@ export const classesRouter = createTRPCRouter({
       }
 
       if (ctx.session.user.email.toLowerCase() !== invite.email.toLowerCase()) {
-        throw new TRPCError({ code: "FORBIDDEN", message: "This invite belongs to a different account." });
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "This invite belongs to a different account.",
+        });
       }
 
       const [existingMember] = await db
         .select()
         .from(classMembers)
-        .where(and(eq(classMembers.classId, invite.classId), eq(classMembers.studentId, ctx.session.user.id)));
+        .where(
+          and(
+            eq(classMembers.classId, invite.classId),
+            eq(classMembers.studentId, ctx.session.user.id),
+          ),
+        );
 
       if (!existingMember) {
         await db.insert(classMembers).values({

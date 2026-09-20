@@ -4,7 +4,6 @@ import "../styles/globals.css";
 import Providers from "@/components/Providers";
 import Navbar from "@/components/Navbar/Navbar";
 
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

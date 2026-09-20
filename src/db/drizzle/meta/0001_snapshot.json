@@ -27,12 +27,8 @@
           "name": "assessment_concepts_assessment_id_assessments_id_fk",
           "tableFrom": "assessment_concepts",
           "tableTo": "assessments",
-          "columnsFrom": [
-            "assessment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assessment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -40,12 +36,8 @@
           "name": "assessment_concepts_concept_id_concepts_id_fk",
           "tableFrom": "assessment_concepts",
           "tableTo": "concepts",
-          "columnsFrom": [
-            "concept_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["concept_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -53,10 +45,7 @@
       "compositePrimaryKeys": {
         "assessment_concepts_pkey": {
           "name": "assessment_concepts_pkey",
-          "columns": [
-            "assessment_id",
-            "concept_id"
-          ]
+          "columns": ["assessment_id", "concept_id"]
         }
       },
       "uniqueConstraints": {},
@@ -134,12 +123,8 @@
           "name": "assessments_teacher_id_user_id_fk",
           "tableFrom": "assessments",
           "tableTo": "user",
-          "columnsFrom": [
-            "teacher_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -147,12 +132,8 @@
           "name": "assessments_material_id_study_materials_id_fk",
           "tableFrom": "assessments",
           "tableTo": "study_materials",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -269,12 +250,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -361,12 +338,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -376,9 +349,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -467,9 +438,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -605,12 +574,8 @@
           "name": "concepts_material_id_study_materials_id_fk",
           "tableFrom": "concepts",
           "tableTo": "study_materials",
-          "columnsFrom": [
-            "material_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["material_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -618,12 +583,8 @@
           "name": "concepts_parent_concept_id_concepts_id_fk",
           "tableFrom": "concepts",
           "tableTo": "concepts",
-          "columnsFrom": [
-            "parent_concept_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["parent_concept_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -714,12 +675,8 @@
           "name": "study_materials_teacher_id_user_id_fk",
           "tableFrom": "study_materials",
           "tableTo": "user",
-          "columnsFrom": [
-            "teacher_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["teacher_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -753,12 +710,8 @@
           "name": "question_concepts_question_id_questions_id_fk",
           "tableFrom": "question_concepts",
           "tableTo": "questions",
-          "columnsFrom": [
-            "question_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["question_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -766,12 +719,8 @@
           "name": "question_concepts_concept_id_concepts_id_fk",
           "tableFrom": "question_concepts",
           "tableTo": "concepts",
-          "columnsFrom": [
-            "concept_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["concept_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -779,10 +728,7 @@
       "compositePrimaryKeys": {
         "question_concepts_pkey": {
           "name": "question_concepts_pkey",
-          "columns": [
-            "question_id",
-            "concept_id"
-          ]
+          "columns": ["question_id", "concept_id"]
         }
       },
       "uniqueConstraints": {},
@@ -857,12 +803,8 @@
           "name": "questions_assessment_id_assessments_id_fk",
           "tableFrom": "questions",
           "tableTo": "assessments",
-          "columnsFrom": [
-            "assessment_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["assessment_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

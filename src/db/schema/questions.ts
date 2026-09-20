@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { assessments } from "./assessments";
 import { concepts } from "./concepts";
 
@@ -12,9 +18,7 @@ export const questions = pgTable("questions", {
   options: text("options").array().notNull(),
   correctOptionIndex: integer("correct_option_index").notNull(),
   explanation: text("explanation").notNull(),
-  difficulty: text("difficulty")
-    .$type<"easy" | "medium" | "hard">()
-    .notNull(),
+  difficulty: text("difficulty").$type<"easy" | "medium" | "hard">().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -33,7 +37,10 @@ export const questionConcepts = pgTable(
       .references(() => concepts.id, { onDelete: "cascade" }),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.questionId, table.conceptId], name: "question_concepts_pkey" }),
+    pk: primaryKey({
+      columns: [table.questionId, table.conceptId],
+      name: "question_concepts_pkey",
+    }),
   }),
 );
 
@@ -45,13 +52,16 @@ export const questionsRelations = relations(questions, ({ one, many }) => ({
   linkedConcepts: many(questionConcepts),
 }));
 
-export const questionConceptsRelations = relations(questionConcepts, ({ one }) => ({
-  question: one(questions, {
-    fields: [questionConcepts.questionId],
-    references: [questions.id],
+export const questionConceptsRelations = relations(
+  questionConcepts,
+  ({ one }) => ({
+    question: one(questions, {
+      fields: [questionConcepts.questionId],
+      references: [questions.id],
+    }),
+    concept: one(concepts, {
+      fields: [questionConcepts.conceptId],
+      references: [concepts.id],
+    }),
   }),
-  concept: one(concepts, {
-    fields: [questionConcepts.conceptId],
-    references: [concepts.id],
-  }),
-}));
+);

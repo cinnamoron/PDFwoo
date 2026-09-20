@@ -16,7 +16,9 @@ export default function MobileMenu({ links }: { links: NavLinkItem[] }) {
 
   function switchRole(nextRole: "teacher" | "student") {
     if (nextRole === role) return;
-    const confirmed = window.confirm(`Switch to the ${nextRole} dashboard? The page will refresh.`);
+    const confirmed = window.confirm(
+      `Switch to the ${nextRole} dashboard? The page will refresh.`,
+    );
     if (!confirmed) return;
     window.localStorage.setItem("conceptiq-role", nextRole);
     dispatch(setRole(nextRole));
@@ -51,7 +53,10 @@ export default function MobileMenu({ links }: { links: NavLinkItem[] }) {
         <div className="my-2 h-px bg-ink-800" />
 
         {isPending ? (
-          <div className="h-10 w-full animate-pulse rounded-xl bg-ink-900" aria-hidden="true" />
+          <div
+            className="h-10 w-full animate-pulse rounded-xl bg-ink-900"
+            aria-hidden="true"
+          />
         ) : !session ? (
           <Link
             href={`/login?callbackUrl=${encodeURIComponent(pathname || "/dashboard")}`}
@@ -70,7 +75,9 @@ export default function MobileMenu({ links }: { links: NavLinkItem[] }) {
                   onClick={() => switchRole(r)}
                   aria-pressed={role === r}
                   className={`flex-1 rounded-lg px-3 py-2 capitalize ${
-                    role === r ? "bg-gradient-to-r from-brand-600 to-bloom-600 text-white" : "text-mist-400"
+                    role === r
+                      ? "bg-gradient-to-r from-brand-600 to-bloom-600 text-white"
+                      : "text-mist-400"
                   }`}
                 >
                   {r}

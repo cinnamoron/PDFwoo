@@ -4,7 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/hooks/hooks";
-import { clearNotifications, closePanel, setRole, togglePanel } from "@/redux/slices/navSlice";
+import {
+  clearNotifications,
+  closePanel,
+  setRole,
+  togglePanel,
+} from "@/redux/slices/navSlice";
 import { authClient } from "@/lib/auth-client";
 
 // Placeholder feed — swap for real concept-gap / attempt data once the
@@ -40,7 +45,9 @@ export default function NavActions() {
 
   function switchRole(nextRole: "teacher" | "student") {
     if (nextRole === role) return;
-    const confirmed = window.confirm(`Switch to the ${nextRole} dashboard? The page will refresh.`);
+    const confirmed = window.confirm(
+      `Switch to the ${nextRole} dashboard? The page will refresh.`,
+    );
     if (!confirmed) return;
     window.localStorage.setItem("conceptiq-role", nextRole);
     dispatch(setRole(nextRole));
@@ -78,7 +85,12 @@ export default function NavActions() {
   }, [dispatch]);
 
   if (isPending) {
-    return <div className="h-10 w-40 animate-pulse rounded-full bg-ink-900" aria-hidden="true" />;
+    return (
+      <div
+        className="h-10 w-40 animate-pulse rounded-full bg-ink-900"
+        aria-hidden="true"
+      />
+    );
   }
 
   if (!session) {
@@ -145,10 +157,15 @@ export default function NavActions() {
         </button>
         {openPanel === "notifications" && (
           <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-ink-800 bg-ink-900/95 p-2 shadow-2xl backdrop-blur-md">
-            <p className="px-3 py-2 text-xs font-medium text-mist-400">Recent activity</p>
+            <p className="px-3 py-2 text-xs font-medium text-mist-400">
+              Recent activity
+            </p>
             <ul className="flex flex-col gap-1">
               {NOTIFICATIONS.map((n) => (
-                <li key={n.id} className="rounded-xl px-3 py-2 hover:bg-ink-800">
+                <li
+                  key={n.id}
+                  className="rounded-xl px-3 py-2 hover:bg-ink-800"
+                >
                   <p className="text-sm font-medium text-white">{n.title}</p>
                   <p className="mt-0.5 text-xs text-mist-400">{n.detail}</p>
                 </li>
@@ -175,10 +192,16 @@ export default function NavActions() {
               <p className="text-xs capitalize text-mist-400">{role} account</p>
             </div>
             <div className="my-1 h-px bg-ink-800" />
-            <a href="/settings/profile" className="block rounded-xl px-3 py-2 text-sm text-mist-300 hover:bg-ink-800 hover:text-white">
+            <a
+              href="/settings/profile"
+              className="block rounded-xl px-3 py-2 text-sm text-mist-300 hover:bg-ink-800 hover:text-white"
+            >
               Your profile
             </a>
-            <a href="/settings" className="block rounded-xl px-3 py-2 text-sm text-mist-300 hover:bg-ink-800 hover:text-white">
+            <a
+              href="/settings"
+              className="block rounded-xl px-3 py-2 text-sm text-mist-300 hover:bg-ink-800 hover:text-white"
+            >
               Settings
             </a>
             <button
@@ -217,7 +240,12 @@ function BellIcon() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M9.5 18a2.5 2.5 0 0 0 5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path
+        d="M9.5 18a2.5 2.5 0 0 0 5 0"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }

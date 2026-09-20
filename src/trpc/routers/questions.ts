@@ -5,7 +5,14 @@ import { z } from "zod";
 import { generateObject } from "ai";
 import { db } from "@/index";
 import { model } from "@/lib/ai";
-import { assessmentConcepts, assessments, concepts, questionConcepts, questions, studyMaterials } from "@/db/schema/schema";
+import {
+  assessmentConcepts,
+  assessments,
+  concepts,
+  questionConcepts,
+  questions,
+  studyMaterials,
+} from "@/db/schema/schema";
 import { createTRPCRouter, protectedProcedure } from "../init";
 
 const questionOptionSchema = z.array(z.string()).length(4);
@@ -18,7 +25,9 @@ const generatedQuestionSchema = z.object({
   difficulty: z.enum(["easy", "medium", "hard"]),
 });
 
-function buildDifficultySplit(count: number): Record<"easy" | "medium" | "hard", number> {
+function buildDifficultySplit(
+  count: number,
+): Record<"easy" | "medium" | "hard", number> {
   if (count <= 0) {
     return { easy: 0, medium: 0, hard: 0 };
   }
@@ -104,7 +113,10 @@ export const questionsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { assessment, material } = await getAssessmentWithMaterial(input.assessmentId, ctx.session.user.id);
+      const { assessment, material } = await getAssessmentWithMaterial(
+        input.assessmentId,
+        ctx.session.user.id,
+      );
 
       const selectedConcepts = await db
         .select({
@@ -140,46 +152,77 @@ export const questionsRouter = createTRPCRouter({
         difficulty: "easy" | "medium" | "hard";
       }> = [];
 
-      const questionConceptLinks: Array<{ questionId: string; conceptId: string }> = [];
+      const questionConceptLinks: Array<{
+        questionId: string;
+        conceptId: string;
+      }> = [];
 
-      for (const { concept, share } of conceptShares) {
-        if (share <= 0) continue;
+      const generationTasks = conceptShares.flatMap(({ concept, share }) => {
+        if (share <= 0) return [];
 
-        let conceptDifficultyCounts: Record<"easy" | "medium" | "hard", number> = { easy: 0, medium: 0, hard: 0 };
+        let conceptDifficultyCounts: Record<
+          "easy" | "medium" | "hard",
+          number
+        > = { easy: 0, medium: 0, hard: 0 };
         if (assessment.difficulty === "mixed") {
           conceptDifficultyCounts = buildDifficultySplit(share);
         } else {
-          const difficulty = assessment.difficulty === "easy" || assessment.difficulty === "medium" || assessment.difficulty === "hard"
-            ? assessment.difficulty
-            : "medium";
+          const difficulty =
+            assessment.difficulty === "easy" ||
+            assessment.difficulty === "medium" ||
+            assessment.difficulty === "hard"
+              ? assessment.difficulty
+              : "medium";
           conceptDifficultyCounts = { easy: 0, medium: 0, hard: 0 };
           conceptDifficultyCounts[difficulty] = share;
         }
 
-        for (const [difficultyKey, count] of Object.entries(conceptDifficultyCounts) as Array<["easy" | "medium" | "hard", number]>) {
-          if (count <= 0) continue;
+        return (Object.entries(conceptDifficultyCounts) as Array<[
+          "easy" | "medium" | "hard",
+          number
+        ]>).flatMap(([difficultyKey, count]) => {
+          if (count <= 0) return [];
 
-          const { object } = await generateObject({
-            model,
-            schema: z.array(generatedQuestionSchema),
-            prompt: `Generate ${count} ${difficultyKey} question(s) grounded only in this material and concept. Use the exact concept name and description as your anchor, and keep the content consistent with the source material. Return a JSON array of objects with questionText, options (exactly 4 strings), correctOptionIndex, explanation, and difficulty. The questions must be aligned to the concept and should not invent unsupported facts.\n\nConcept name: ${concept.name}\nConcept description: ${concept.description ?? "No additional description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`,
+          return [
+            (async () => {
+              const { object } = await generateObject({
+                model,
+                schema: z.array(generatedQuestionSchema),
+                prompt: `Generate ${count} ${difficultyKey} question(s) grounded only in this material and concept. Use the exact concept name and description as your anchor, and keep the content consistent with the source material. Return a JSON array of objects with questionText, options (exactly 4 strings), correctOptionIndex, explanation, and difficulty. The questions must be aligned to the concept and should not invent unsupported facts.\n\nConcept name: ${concept.name}\nConcept description: ${concept.description ?? "No additional description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`,
+              });
+
+              const generated = Array.isArray(object) ? object : [];
+              const generatedRows = generated.slice(0, count).map((item) => {
+                const questionId = randomUUID();
+                return {
+                  questionId,
+                  row: {
+                    id: questionId,
+                    assessmentId: assessment.id,
+                    questionText: item.questionText,
+                    options: item.options,
+                    correctOptionIndex: item.correctOptionIndex,
+                    explanation: item.explanation,
+                    difficulty: item.difficulty,
+                  },
+                  conceptId: concept.id,
+                };
+              });
+
+              return generatedRows;
+            })(),
+          ];
+        });
+      });
+
+      const generatedBatches = await Promise.all(generationTasks);
+      for (const batch of generatedBatches) {
+        for (const item of batch) {
+          inserted.push(item.row);
+          questionConceptLinks.push({
+            questionId: item.questionId,
+            conceptId: item.conceptId,
           });
-
-          const generated = Array.isArray(object) ? object : [];
-
-          for (const item of generated.slice(0, count)) {
-            const questionId = randomUUID();
-            inserted.push({
-              id: questionId,
-              assessmentId: assessment.id,
-              questionText: item.questionText,
-              options: item.options,
-              correctOptionIndex: item.correctOptionIndex,
-              explanation: item.explanation,
-              difficulty: item.difficulty,
-            });
-            questionConceptLinks.push({ questionId, conceptId: concept.id });
-          }
         }
       }
 
@@ -196,7 +239,10 @@ export const questionsRouter = createTRPCRouter({
   listByAssessment: protectedProcedure
     .input(z.object({ assessmentId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const { assessment } = await getAssessmentWithMaterial(input.assessmentId, ctx.session.user.id);
+      const { assessment } = await getAssessmentWithMaterial(
+        input.assessmentId,
+        ctx.session.user.id,
+      );
 
       const rows = await db
         .select({
@@ -205,7 +251,10 @@ export const questionsRouter = createTRPCRouter({
           conceptName: concepts.name,
         })
         .from(questions)
-        .leftJoin(questionConcepts, eq(questionConcepts.questionId, questions.id))
+        .leftJoin(
+          questionConcepts,
+          eq(questionConcepts.questionId, questions.id),
+        )
         .leftJoin(concepts, eq(concepts.id, questionConcepts.conceptId))
         .where(eq(questions.assessmentId, assessment.id));
 
@@ -242,14 +291,17 @@ export const questionsRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { question, assessment, material } = await getQuestionWithAssessment(input.id, ctx.session.user.id);
+      const { question, assessment, material } =
+        await getQuestionWithAssessment(input.id, ctx.session.user.id);
 
       const validConcepts = await db
         .select()
         .from(concepts)
         .where(eq(concepts.materialId, material.id));
 
-      const validConceptIds = new Set(validConcepts.map((concept) => concept.id));
+      const validConceptIds = new Set(
+        validConcepts.map((concept) => concept.id),
+      );
 
       if (input.conceptId && !validConceptIds.has(input.conceptId)) {
         throw new TRPCError({
@@ -263,14 +315,17 @@ export const questionsRouter = createTRPCRouter({
         .set({
           questionText: input.questionText ?? question.questionText,
           options: input.options ?? question.options,
-          correctOptionIndex: input.correctOptionIndex ?? question.correctOptionIndex,
+          correctOptionIndex:
+            input.correctOptionIndex ?? question.correctOptionIndex,
           explanation: input.explanation ?? question.explanation,
         })
         .where(eq(questions.id, question.id))
         .returning();
 
       if (input.conceptId) {
-        await db.delete(questionConcepts).where(eq(questionConcepts.questionId, question.id));
+        await db
+          .delete(questionConcepts)
+          .where(eq(questionConcepts.questionId, question.id));
         await db.insert(questionConcepts).values({
           questionId: question.id,
           conceptId: input.conceptId,
@@ -283,7 +338,8 @@ export const questionsRouter = createTRPCRouter({
   regenerate: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const { question, assessment, material } = await getQuestionWithAssessment(input.id, ctx.session.user.id);
+      const { question, assessment, material } =
+        await getQuestionWithAssessment(input.id, ctx.session.user.id);
 
       const [currentConcept] = await db
         .select()
@@ -292,7 +348,10 @@ export const questionsRouter = createTRPCRouter({
         .where(eq(questionConcepts.questionId, question.id));
 
       if (!currentConcept) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Question is missing its concept link." });
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Question is missing its concept link.",
+        });
       }
 
       const { object } = await generateObject({
@@ -319,7 +378,10 @@ export const questionsRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const { question, assessment } = await getQuestionWithAssessment(input.id, ctx.session.user.id);
+      const { question, assessment } = await getQuestionWithAssessment(
+        input.id,
+        ctx.session.user.id,
+      );
 
       await db.delete(questions).where(eq(questions.id, question.id));
       return question;

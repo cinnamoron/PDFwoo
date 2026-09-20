@@ -16,7 +16,7 @@ export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   const isProtected = PROTECTED_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
   if (!isProtected) return NextResponse.next();
 

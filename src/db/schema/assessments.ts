@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { integer, pgTable, primaryKey, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { user } from "./auth";
 import { concepts } from "./concepts";
 import { studyMaterials } from "./materials";
@@ -40,7 +46,10 @@ export const assessmentConcepts = pgTable(
       .references(() => concepts.id, { onDelete: "cascade" }),
   },
   (table) => ({
-    pk: primaryKey({ columns: [table.assessmentId, table.conceptId], name: "assessment_concepts_pkey" }),
+    pk: primaryKey({
+      columns: [table.assessmentId, table.conceptId],
+      name: "assessment_concepts_pkey",
+    }),
   }),
 );
 
@@ -56,13 +65,16 @@ export const assessmentsRelations = relations(assessments, ({ one, many }) => ({
   selectedConcepts: many(assessmentConcepts),
 }));
 
-export const assessmentConceptsRelations = relations(assessmentConcepts, ({ one }) => ({
-  assessment: one(assessments, {
-    fields: [assessmentConcepts.assessmentId],
-    references: [assessments.id],
+export const assessmentConceptsRelations = relations(
+  assessmentConcepts,
+  ({ one }) => ({
+    assessment: one(assessments, {
+      fields: [assessmentConcepts.assessmentId],
+      references: [assessments.id],
+    }),
+    concept: one(concepts, {
+      fields: [assessmentConcepts.conceptId],
+      references: [concepts.id],
+    }),
   }),
-  concept: one(concepts, {
-    fields: [assessmentConcepts.conceptId],
-    references: [concepts.id],
-  }),
-}));
+);

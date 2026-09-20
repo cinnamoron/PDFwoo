@@ -7,5 +7,7 @@ export default async function AssessmentPage({
 }) {
   const { materialId, assessmentId } = await params;
 
-  return <AssessmentWorkspace materialId={materialId} assessmentId={assessmentId} />;
+  return (
+    <AssessmentWorkspace materialId={materialId} assessmentId={assessmentId} />
+  );
 }

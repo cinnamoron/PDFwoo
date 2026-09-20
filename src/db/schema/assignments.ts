@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { boolean, integer, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  boolean,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { assessments } from "./assessments";
 import { user } from "./auth";
 import { classes } from "./classes";
@@ -26,7 +32,10 @@ export const assignmentAttempts = pgTable("assignment_attempts", {
   studentId: text("student_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  status: text("status").$type<"in_progress" | "completed">().default("completed").notNull(),
+  status: text("status")
+    .$type<"in_progress" | "completed">()
+    .default("completed")
+    .notNull(),
   score: integer("score").default(0),
   totalQuestions: integer("total_questions").default(0).notNull(),
   startedAt: timestamp("started_at").defaultNow().notNull(),
@@ -45,37 +54,46 @@ export const assignmentAnswers = pgTable("assignment_answers", {
   isCorrect: boolean("is_correct").notNull(),
 });
 
-export const assessmentAssignmentsRelations = relations(assessmentAssignments, ({ one, many }) => ({
-  assessment: one(assessments, {
-    fields: [assessmentAssignments.assessmentId],
-    references: [assessments.id],
+export const assessmentAssignmentsRelations = relations(
+  assessmentAssignments,
+  ({ one, many }) => ({
+    assessment: one(assessments, {
+      fields: [assessmentAssignments.assessmentId],
+      references: [assessments.id],
+    }),
+    class: one(classes, {
+      fields: [assessmentAssignments.classId],
+      references: [classes.id],
+    }),
+    attempts: many(assignmentAttempts),
   }),
-  class: one(classes, {
-    fields: [assessmentAssignments.classId],
-    references: [classes.id],
-  }),
-  attempts: many(assignmentAttempts),
-}));
+);
 
-export const assignmentAttemptsRelations = relations(assignmentAttempts, ({ one, many }) => ({
-  assignment: one(assessmentAssignments, {
-    fields: [assignmentAttempts.assignmentId],
-    references: [assessmentAssignments.id],
+export const assignmentAttemptsRelations = relations(
+  assignmentAttempts,
+  ({ one, many }) => ({
+    assignment: one(assessmentAssignments, {
+      fields: [assignmentAttempts.assignmentId],
+      references: [assessmentAssignments.id],
+    }),
+    student: one(user, {
+      fields: [assignmentAttempts.studentId],
+      references: [user.id],
+    }),
+    answers: many(assignmentAnswers),
   }),
-  student: one(user, {
-    fields: [assignmentAttempts.studentId],
-    references: [user.id],
-  }),
-  answers: many(assignmentAnswers),
-}));
+);
 
-export const assignmentAnswersRelations = relations(assignmentAnswers, ({ one }) => ({
-  attempt: one(assignmentAttempts, {
-    fields: [assignmentAnswers.attemptId],
-    references: [assignmentAttempts.id],
+export const assignmentAnswersRelations = relations(
+  assignmentAnswers,
+  ({ one }) => ({
+    attempt: one(assignmentAttempts, {
+      fields: [assignmentAnswers.attemptId],
+      references: [assignmentAttempts.id],
+    }),
+    question: one(questions, {
+      fields: [assignmentAnswers.questionId],
+      references: [questions.id],
+    }),
   }),
-  question: one(questions, {
-    fields: [assignmentAnswers.questionId],
-    references: [questions.id],
-  }),
-}));
+);

@@ -1,3 +1,7 @@
+-- This migration was edited after initial application to add IF NOT EXISTS guards,
+-- reconciling schema drift that occurred via manual scripts (since removed).
+-- Future schema changes should always be new migrations via `bun run db:generate`,
+-- never edits to this file.
 CREATE TABLE IF NOT EXISTS "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,

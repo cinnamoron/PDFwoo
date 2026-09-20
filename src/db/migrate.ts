@@ -7,7 +7,9 @@ export async function migrateDatabase() {
   await migrate(db, { migrationsFolder });
 }
 
-const isMigrationEntryPoint = /(?:^|[\\/])migrate\.(?:ts|js)$/.test(process.argv[1] ?? "");
+const isMigrationEntryPoint = /(?:^|[\\/])migrate\.(?:ts|js)$/.test(
+  process.argv[1] ?? "",
+);
 
 if (isMigrationEntryPoint) {
   migrateDatabase()

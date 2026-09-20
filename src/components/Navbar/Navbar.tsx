@@ -39,7 +39,7 @@ export default function Navbar() {
     <header className="sticky top-0 z-50 bg-ink-950/90 backdrop-blur-md">
       <nav className="relative mx-auto flex h-[72px] max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link
-            href="/"
+          href="/"
           className="flex items-center gap-2.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/70"
         >
           <ConceptMark />
@@ -84,16 +84,49 @@ function ConceptMark() {
   return (
     <svg viewBox="0 0 32 32" className="h-8 w-8 shrink-0" aria-hidden="true">
       <defs>
-        <linearGradient id="conceptGrad" x1="4" y1="26" x2="28" y2="6" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="conceptGrad"
+          x1="4"
+          y1="26"
+          x2="28"
+          y2="6"
+          gradientUnits="userSpaceOnUse"
+        >
           <stop offset="0%" stopColor="var(--color-bloom-500)" />
           <stop offset="100%" stopColor="var(--color-brand-500)" />
         </linearGradient>
       </defs>
-      <path d="M9 22 16 9 23 22" stroke="url(#conceptGrad)" strokeWidth="1.7" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M16 9V22" stroke="url(#conceptGrad)" strokeWidth="1.7" strokeOpacity="0.45" />
+      <path
+        d="M9 22 16 9 23 22"
+        stroke="url(#conceptGrad)"
+        strokeWidth="1.7"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 9V22"
+        stroke="url(#conceptGrad)"
+        strokeWidth="1.7"
+        strokeOpacity="0.45"
+      />
       <circle cx="16" cy="9" r="3.2" fill="url(#conceptGrad)" />
-      <circle cx="9" cy="22" r="3.2" fill="var(--color-ink-950)" stroke="url(#conceptGrad)" strokeWidth="1.7" />
-      <circle cx="23" cy="22" r="3.2" fill="var(--color-ink-950)" stroke="url(#conceptGrad)" strokeWidth="1.7" />
+      <circle
+        cx="9"
+        cy="22"
+        r="3.2"
+        fill="var(--color-ink-950)"
+        stroke="url(#conceptGrad)"
+        strokeWidth="1.7"
+      />
+      <circle
+        cx="23"
+        cy="22"
+        r="3.2"
+        fill="var(--color-ink-950)"
+        stroke="url(#conceptGrad)"
+        strokeWidth="1.7"
+      />
     </svg>
   );
 }

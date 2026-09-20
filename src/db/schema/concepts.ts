@@ -1,5 +1,11 @@
 import { relations } from "drizzle-orm";
-import { AnyPgColumn, boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import {
+  AnyPgColumn,
+  boolean,
+  pgTable,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { studyMaterials } from "./materials";
 
 export const concepts = pgTable("concepts", {
