@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { generateObject } from "ai";
 import { db } from "@/index";
-import { model } from "@/lib/ai";
+import { fallbackModel, model } from "@/lib/ai";
 import {
   assessmentConcepts,
   assessments,
@@ -24,6 +24,70 @@ const generatedQuestionSchema = z.object({
   explanation: z.string().min(1),
   difficulty: z.enum(["easy", "medium", "hard"]),
 });
+
+function getProviderStatusCode(error: unknown): number | undefined {
+  if (typeof error !== "object" || error === null) return undefined;
+  if ("statusCode" in error && typeof error.statusCode === "number") {
+    return error.statusCode;
+  }
+  if ("lastError" in error) return getProviderStatusCode(error.lastError);
+  return undefined;
+}
+
+function getProviderFailureMessage(error: unknown): string {
+  const statusCode = getProviderStatusCode(error);
+
+  if (statusCode === 401) {
+    return "The Gemini API key is invalid or revoked. Replace GOOGLE_GENERATIVE_AI_API_KEY in the server environment.";
+  }
+  if (statusCode === 403) {
+    return "Gemini denied this API key. Check that the Generative Language API is enabled and that the key is not restricted.";
+  }
+  if (statusCode === 404) {
+    return "The configured AI model is unavailable. Check the server model configuration.";
+  }
+  if (statusCode === 429) {
+    return "Question generation is temporarily unavailable because the AI provider quota was reached. Please try again later.";
+  }
+  if (statusCode !== undefined && statusCode >= 500) {
+    return "The AI provider is temporarily unavailable. Please try again shortly.";
+  }
+  if (error instanceof TypeError) {
+    return "Could not connect to the AI provider. Check the server's network connection and try again.";
+  }
+  return "The AI provider could not generate questions. Check the server logs for details.";
+}
+
+async function generateWithQuotaFallback<TSchema extends z.ZodType>(
+  schema: TSchema,
+  prompt: string,
+) {
+  const request = { schema, prompt, maxRetries: 0 };
+
+  try {
+    return await generateObject({ ...request, model });
+  } catch (primaryError) {
+    const statusCode = getProviderStatusCode(primaryError);
+    if (statusCode === 401 || statusCode === 403) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: getProviderFailureMessage(primaryError),
+      });
+    }
+  }
+
+  try {
+    return await generateObject({ ...request, model: fallbackModel });
+  } catch (fallbackError) {
+    throw new TRPCError({
+      code:
+        getProviderStatusCode(fallbackError) === 429
+          ? "TOO_MANY_REQUESTS"
+          : "INTERNAL_SERVER_ERROR",
+      message: getProviderFailureMessage(fallbackError),
+    });
+  }
+}
 
 function buildDifficultySplit(
   count: number,
@@ -184,12 +248,11 @@ export const questionsRouter = createTRPCRouter({
           if (count <= 0) return [];
 
           return [
-            (async () => {
-              const { object } = await generateObject({
-                model,
-                schema: z.array(generatedQuestionSchema),
-                prompt: `Generate ${count} ${difficultyKey} question(s) grounded only in this material and concept. Use the exact concept name and description as your anchor, and keep the content consistent with the source material. Return a JSON array of objects with questionText, options (exactly 4 strings), correctOptionIndex, explanation, and difficulty. The questions must be aligned to the concept and should not invent unsupported facts.\n\nConcept name: ${concept.name}\nConcept description: ${concept.description ?? "No additional description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`,
-              });
+            async () => {
+              const { object } = await generateWithQuotaFallback(
+                z.array(generatedQuestionSchema),
+                `Generate ${count} ${difficultyKey} question(s) grounded only in this material and concept. Use the exact concept name and description as your anchor, and keep the content consistent with the source material. Return a JSON array of objects with questionText, options (exactly 4 strings), correctOptionIndex, explanation, and difficulty. The questions must be aligned to the concept and should not invent unsupported facts.\n\nConcept name: ${concept.name}\nConcept description: ${concept.description ?? "No additional description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`,
+              );
 
               const generated = Array.isArray(object) ? object : [];
               const generatedRows = generated.slice(0, count).map((item) => {
@@ -210,13 +273,13 @@ export const questionsRouter = createTRPCRouter({
               });
 
               return generatedRows;
-            })(),
+            },
           ];
         });
       });
 
-      const generatedBatches = await Promise.all(generationTasks);
-      for (const batch of generatedBatches) {
+      for (const generationTask of generationTasks) {
+        const batch = await generationTask();
         for (const item of batch) {
           inserted.push(item.row);
           questionConceptLinks.push({
@@ -354,11 +417,10 @@ export const questionsRouter = createTRPCRouter({
         });
       }
 
-      const { object } = await generateObject({
-        model,
-        schema: generatedQuestionSchema,
-        prompt: `Create a single replacement question for this concept and difficulty. Keep it grounded only in the material text. The question should be written at ${question.difficulty} level.\n\nConcept name: ${currentConcept.concepts.name}\nConcept description: ${currentConcept.concepts.description ?? "No description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`,
-      });
+      const { object } = await generateWithQuotaFallback(
+        generatedQuestionSchema,
+        `Create a single replacement question for this concept and difficulty. Keep it grounded only in the material text. The question should be written at ${question.difficulty} level.\n\nConcept name: ${currentConcept.concepts.name}\nConcept description: ${currentConcept.concepts.description ?? "No description available."}\n\nMaterial text:\n${material.extractedText ?? "No extracted text available."}`,
+      );
 
       const [updatedQuestion] = await db
         .update(questions)

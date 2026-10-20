@@ -50,6 +50,9 @@ export default function AssessmentWorkspace({
           queryKey: trpc.assessments.get.queryKey({ assessmentId }),
         });
       },
+      onError: (error) => {
+        console.error("[questions] generation failed", error);
+      },
     }),
   );
   const generateQuestions = useMutation(
@@ -79,6 +82,9 @@ export default function AssessmentWorkspace({
         await queryClient.invalidateQueries({
           queryKey: trpc.questions.listByAssessment.queryKey({ assessmentId }),
         });
+      },
+      onError: (error) => {
+        console.error("[questions] regeneration failed", error);
       },
     }),
   );
@@ -192,12 +198,12 @@ export default function AssessmentWorkspace({
     });
   }
 
-  async function handleGenerateQuestions() {
-    await generateQuestions.mutateAsync({ assessmentId, count: numQuestions });
+  function handleGenerateQuestions() {
+    generateQuestions.mutate({ assessmentId, count: numQuestions });
   }
 
-  async function handleGenerateMore() {
-    await generateQuestions.mutateAsync({
+  function handleGenerateMore() {
+    generateQuestions.mutate({
       assessmentId,
       count: extraGenerateCount,
     });
@@ -537,6 +543,17 @@ export default function AssessmentWorkspace({
                 )}
               </div>
             </div>
+
+            {(generateQuestions.error || regenerateQuestion.error) && (
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-red-500/35 bg-red-500/10 p-3 text-sm text-red-200"
+              >
+                {getUserFacingErrorMessage(
+                  generateQuestions.error ?? regenerateQuestion.error,
+                )}
+              </div>
+            )}
 
             {questions.length === 0 ? (
               <div className="mt-5 rounded-2xl border border-dashed border-ink-700 bg-ink-950/30 p-6 text-sm text-mist-400">

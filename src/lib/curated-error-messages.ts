@@ -23,6 +23,12 @@ export const CURATED_ERROR_MESSAGES = new Set([
   "Material file is not available",
   "Invalid file path",
   "Failed to remove the material file from storage.",
+  "The Gemini API key is invalid or revoked. Replace GOOGLE_GENERATIVE_AI_API_KEY in the server environment.",
+  "Gemini denied this API key. Check that the Generative Language API is enabled and that the key is not restricted.",
+  "The configured AI model is unavailable. Check the server model configuration.",
   "Question generation is temporarily unavailable because the AI provider quota was reached. Please try again later.",
+  "The AI provider is temporarily unavailable. Please try again shortly.",
+  "Could not connect to the AI provider. Check the server's network connection and try again.",
+  "The AI provider could not generate questions. Check the server logs for details.",
   "No practice questions were generated. Please try again.",
 ]);
